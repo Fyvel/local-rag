@@ -1,0 +1,160 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/api/v1/health": {
+            "get": {
+                "description": "Returns the health status of the API service",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Health check endpoint",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.SuccessResponse-api_HealthCheckResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/index-github": {
+            "post": {
+                "description": "Fetches and indexes the contents of a GitHub repository",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "indexing"
+                ],
+                "summary": "Index a GitHub repository",
+                "parameters": [
+                    {
+                        "description": "Repository indexing parameters",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.IndexGithubRepoRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/api.IndexGithubRepoResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "api.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "Invalid request parameters"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "api.HealthCheckResponse": {
+            "type": "object",
+            "properties": {
+                "service": {
+                    "type": "string",
+                    "example": "local-rag-api"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "ok"
+                },
+                "version": {
+                    "type": "string",
+                    "example": "1.0.0"
+                }
+            }
+        },
+        "api.IndexGithubRepoRequest": {
+            "type": "object",
+            "required": [
+                "github_url"
+            ],
+            "properties": {
+                "file_types": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "md",
+                        "mdx"
+                    ]
+                },
+                "github_url": {
+                    "type": "string",
+                    "example": "https://github.com/username/repo"
+                },
+                "index_source": {
+                    "type": "string",
+                    "example": "target_index"
+                }
+            }
+        },
+        "api.IndexGithubRepoResponse": {
+            "type": "object",
+            "properties": {
+                "index_id": {
+                    "type": "string",
+                    "example": "target_index"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "api.SuccessResponse-api_HealthCheckResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.HealthCheckResponse"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        }
+    }
+}

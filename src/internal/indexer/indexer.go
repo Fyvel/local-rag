@@ -9,7 +9,7 @@ import (
 
 	"github.com/tmc/langchaingo/textsplitter"
 
-	"indexing/internal/client"
+	"indexing/client"
 	"indexing/internal/embeddings"
 	"indexing/internal/embeddings/ollama"
 	"indexing/internal/fetcher"

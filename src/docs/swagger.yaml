@@ -1,0 +1,106 @@
+definitions:
+  api.ErrorResponse:
+    properties:
+      error:
+        example: Invalid request parameters
+        type: string
+      success:
+        example: false
+        type: boolean
+    type: object
+  api.HealthCheckResponse:
+    properties:
+      service:
+        example: local-rag-api
+        type: string
+      status:
+        example: ok
+        type: string
+      version:
+        example: 1.0.0
+        type: string
+    type: object
+  api.IndexGithubRepoRequest:
+    properties:
+      file_types:
+        example:
+        - md
+        - mdx
+        items:
+          type: string
+        type: array
+      github_url:
+        example: https://github.com/username/repo
+        type: string
+      index_source:
+        example: target_index
+        type: string
+    required:
+    - github_url
+    type: object
+  api.IndexGithubRepoResponse:
+    properties:
+      index_id:
+        example: target_index
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
+  api.SuccessResponse-api_HealthCheckResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.HealthCheckResponse'
+      success:
+        example: true
+        type: boolean
+    type: object
+info:
+  contact: {}
+paths:
+  /api/v1/health:
+    get:
+      consumes:
+      - application/json
+      description: Returns the health status of the API service
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.SuccessResponse-api_HealthCheckResponse'
+      summary: Health check endpoint
+      tags:
+      - health
+  /api/v1/index-github:
+    post:
+      consumes:
+      - application/json
+      description: Fetches and indexes the contents of a GitHub repository
+      parameters:
+      - description: Repository indexing parameters
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.IndexGithubRepoRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.IndexGithubRepoResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Index a GitHub repository
+      tags:
+      - indexing
+swagger: "2.0"

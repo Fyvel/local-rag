@@ -1,7 +1,7 @@
 package ollama
 
 import (
-	"indexing/internal/client"
+	"indexing/client"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

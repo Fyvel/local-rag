@@ -12,7 +12,7 @@ Based on [LangChain framework](https://langchain.com)
 ❌ - Indexing local files  
 ❌ - RAG Orchestrator
 
-# 0 - Prerequisites installation
+# Prerequisites installation
 
 - Install [Ollama](https://ollama.com/download)
 - Pull [some models](https://ollama.com/library) to mess with
@@ -24,7 +24,7 @@ ollama pull mistral:latest # general purpose
 
 - Install [Docker](https://docs.docker.com/get-started/get-docker/)
 
-# 1 - Setup a UI
+# Setup a UI
 
 Here's a sample of the final result:
 ![alt text](screenshot-web-search.png)
@@ -60,9 +60,7 @@ Visit `http://<your_ip>:6969` (or http://localhost:6969) in your browser.
 > **Note:**  
 > On first run, you will be prompted to create an **admin account**. Other user accounts can be created later on.
 
-## Adjust the settings
-
-### Set system prompt
+## Set system prompt
 
 Go to `Settings` > `General` > `System Prompt` and set it to your liking.
 
@@ -75,7 +73,7 @@ You are the most efficient AI Assistant that answers following these principles:
 - Fact-check and provide sources when needed.
 ```
 
-### Advanced parameters
+## Advanced parameters
 
 Go to `Settings` > `Advanced` and set the following parameters:  
 _so it knows how many R are in strawberry_
@@ -87,7 +85,7 @@ Frequency Penalty: 1 # no recall/repeat
 Max tokens (num_predict): 4096 # to be safe
 ```
 
-### Enable Web Search
+## Enable Web Search
 
 > **Note:**  
 > We are using Google Search Engine here, but other search engines are available. Full documentation is available [here](https://docs.openwebui.com/tutorials/web-search/google-pse/)
@@ -103,3 +101,15 @@ Set the **Web Search Engine** to be `google_pse` and fill in the `API Key` and `
 Search Result Count: 5
 Concurrent Requests: 6
 ```
+
+# Indexing
+## Indexing github repositories
+TODO
+## Indexing local files
+TODO
+
+# RAG Orchestrator
+## Endpoints
+TODO
+## Open WebUI integration
+TODO

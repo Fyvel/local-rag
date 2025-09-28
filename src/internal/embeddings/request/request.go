@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"indexing/internal/client"
+	"indexing/client"
 	"io"
 	"net/http"
 )
