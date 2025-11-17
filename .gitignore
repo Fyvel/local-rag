@@ -12,3 +12,6 @@ data/
 # Environment
 .venv/
 .env
+
+# Build outputs
+bin/

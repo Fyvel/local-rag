@@ -16,7 +16,7 @@ type Collection struct {
 	Database string                 `json:"database"`
 }
 
-func (c *Client) GetCollection(ctx context.Context, name string) (*Collection, error) {
+func (c *Client) GetCollections(ctx context.Context) ([]Collection, error) {
 	url := fmt.Sprintf("%s/api/v2/tenants/%s/databases/%s/collections",
 		c.baseURL, c.tenant, c.database)
 
@@ -29,28 +29,52 @@ func (c *Client) GetCollection(ctx context.Context, name string) (*Collection, e
 		req.Header.Set("x-chroma-token", c.token)
 	}
 
-	resp, err := c.httpClient.Do(req)
+	res, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list collections: %w", err)
 	}
-	defer resp.Body.Close()
+	defer res.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to list collections, status: %d", resp.StatusCode)
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to list collections, status: %d", res.StatusCode)
 	}
 
 	var collections []Collection
-	if err := json.NewDecoder(resp.Body).Decode(&collections); err != nil {
+	if err := json.NewDecoder(res.Body).Decode(&collections); err != nil {
 		return nil, fmt.Errorf("failed to decode collections: %w", err)
 	}
 
-	for _, coll := range collections {
-		if coll.Name == name {
-			return &coll, nil
-		}
+	return collections, nil
+}
+
+func (c *Client) GetCollection(ctx context.Context, name string) (*Collection, error) {
+	url := fmt.Sprintf("%s/api/v2/tenants/%s/databases/%s/collections/%s",
+		c.baseURL, c.tenant, c.database, name)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	return nil, fmt.Errorf("collection %s not found", name)
+	if c.token != "" {
+		req.Header.Set("x-chroma-token", c.token)
+	}
+
+	res, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get collection: %w", err)
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("collection not found, status: %d", res.StatusCode)
+	}
+	var collection Collection
+	if err := json.NewDecoder(res.Body).Decode(&collection); err != nil {
+		return nil, fmt.Errorf("failed to decode resonse: %w", err)
+	}
+
+	return &collection, nil
 }
 
 func (c *Client) CreateCollection(ctx context.Context, name string) (*Collection, error) {
@@ -77,19 +101,19 @@ func (c *Client) CreateCollection(ctx context.Context, name string) (*Collection
 		req.Header.Set("x-chroma-token", c.token)
 	}
 
-	resp, err := c.httpClient.Do(req)
+	res, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create collection: %w", err)
 	}
-	defer resp.Body.Close()
+	defer res.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to create collection, status: %d", resp.StatusCode)
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to create collection, status: %d", res.StatusCode)
 	}
 
 	var collection Collection
-	if err := json.NewDecoder(resp.Body).Decode(&collection); err != nil {
-		return nil, fmt.Errorf("failed to decode response: %w", err)
+	if err := json.NewDecoder(res.Body).Decode(&collection); err != nil {
+		return nil, fmt.Errorf("failed to decode resonse: %w", err)
 	}
 
 	return &collection, nil

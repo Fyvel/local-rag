@@ -15,7 +15,6 @@ type IndexGithubRepoRequest struct {
 }
 
 type IndexGithubRepoResponse struct {
-	Status  string `json:"status" example:"success"`
 	IndexID string `json:"index_id" example:"target_index"`
 }
 
@@ -25,7 +24,7 @@ type IndexGithubRepoResponse struct {
 // @Accept       json
 // @Produce      json
 // @Param        request  body      IndexGithubRepoRequest  true  "Repository indexing parameters"
-// @Success      201      {object}  IndexGithubRepoResponse
+// @Success      201      {object}  SuccessResponse[IndexGithubRepoResponse]
 // @Failure      400      {object}  ErrorResponse
 // @Failure      500      {object}  ErrorResponse
 // @Router       /api/v1/index-github [post]
@@ -67,7 +66,6 @@ func IndexGithubHandler(c *gin.Context) {
 	c.JSON(http.StatusCreated, SuccessResponse[IndexGithubRepoResponse]{
 		Success: true,
 		Data: IndexGithubRepoResponse{
-			Status:  "success",
 			IndexID: req.TargetIndex,
 		},
 	})

@@ -66,7 +66,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/api.IndexGithubRepoResponse"
+                            "$ref": "#/definitions/api.SuccessResponse-api_IndexGithubRepoResponse"
                         }
                     },
                     "400": {
@@ -148,10 +148,6 @@ const docTemplate = `{
                 "index_id": {
                     "type": "string",
                     "example": "target_index"
-                },
-                "status": {
-                    "type": "string",
-                    "example": "success"
                 }
             }
         },
@@ -160,6 +156,18 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.HealthCheckResponse"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "api.SuccessResponse-api_IndexGithubRepoResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.IndexGithubRepoResponse"
                 },
                 "success": {
                     "type": "boolean",

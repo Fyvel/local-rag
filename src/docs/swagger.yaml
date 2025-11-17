@@ -43,14 +43,19 @@ definitions:
       index_id:
         example: target_index
         type: string
-      status:
-        example: success
-        type: string
     type: object
   api.SuccessResponse-api_HealthCheckResponse:
     properties:
       data:
         $ref: '#/definitions/api.HealthCheckResponse'
+      success:
+        example: true
+        type: boolean
+    type: object
+  api.SuccessResponse-api_IndexGithubRepoResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.IndexGithubRepoResponse'
       success:
         example: true
         type: boolean
@@ -91,7 +96,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/api.IndexGithubRepoResponse'
+            $ref: '#/definitions/api.SuccessResponse-api_IndexGithubRepoResponse'
         "400":
           description: Bad Request
           schema:
