@@ -1,115 +1,137 @@
-# A Journey to Local RAG
+# Local RAG API
 
-Based on [LangChain framework](https://langchain.com)  
-**state-of-the-art**
+A Go-based API service for indexing and searching repositories using Retrieval-Augmented Generation (RAG) techniques.
+
+Based on [LangChain framework](https://langchain.com) principles.
+
 ![rag_detail](https://github.com/langchain-ai/rag-from-scratch/assets/122662504/54a2d76c-b07e-49e7-b4ce-fc45667360a1)
 
-# Roadmap
+## Roadmap
 
-✅ - AI Chat App running on local network  
-✅ - File upload  
-✅ - Web Search  
-❌ - Indexing local files  
-❌ - RAG Orchestrator
+✅ Health check endpoint  
+✅ GitHub repository indexing  
+⬜ Discussion management (CRUD operations)  
+⬜ Question/answer within discussions  
+⬜ Discussion history tracking  
 
-# Prerequisites installation
+## Features
 
-- Install [Ollama](https://ollama.com/download)
-- Pull [some models](https://ollama.com/library) to mess with
+- 🔍 **GitHub Repository Indexing**: Fetch and index content from public GitHub repositories
+- 📄 **File Type Filtering**: Selectively index specific file types (e.g., `.md`, `.mdx`)
+- 🚀 **REST API**: Simple HTTP endpoints for indexing and health checks
+- 📚 **Swagger Documentation**: Auto-generated API documentation
+- 🧱 **DDD Architecture**: Domain-driven design with clear separation of concerns
+- 🔌 **Vector Store Integration**: ChromaDB for embedding storage
+- 🤖 **Ollama Integration**: Local embeddings generation
 
-```sh
-ollama pull deepseek-r1:14b # reasoning model
-ollama pull mistral:latest # general purpose
+## Prerequisites
+
+- Go 1.23.3 or higher.  
+- Git (for cloning repositories).  
+- [swag](https://github.com/swaggo/swag) CLI tool for Swagger docs.  
+- [Ollama](https://ollama.ai/) for local embeddings.  
+- [ChromaDB](https://www.trychroma.com/) for vector storage.  
+- [SQLite](https://www.sqlite.org/index.html) for local database storage.  
+
+Install swag:
+```bash
+go install github.com/swaggo/swag/cmd/swag@latest
 ```
 
-- Install [Docker](https://docs.docker.com/get-started/get-docker/)
+### DDD Architecture Layers
+- **`cmd/`**: Application entry points
+- **`internal/api/`**: Interface layer - HTTP handlers, routing, request/response types
+- **`internal/application/`**: Application layer - Use cases coordinating domain logic
+- **`internal/domain/`**: Domain layer - Business logic (embeddings, fetcher, indexer)
+- **`internal/infra/`**: Infrastructure layer - External services and persistence
 
-# Setup a UI
+## Quick Start
 
-Here's a sample of the final result:
-![alt text](screenshot-web-search.png)
-
-## Setup docker
+### 1. Clone the Repository
 
 ```bash
-# Pull the latest image
-docker pull ghcr.io/open-webui/open-webui:main
-
-# Volume to persist data
-docker volume create open-webui-data
-
-# Run the container
-docker run -d -p 6969:8080 \
-	-v open-webui-data:/app/backend/data \
-	--name open-webui \
-	ghcr.io/open-webui/open-webui:main
+git clone https://github.com/fyvel/local-rag.git
+cd local-rag/src
 ```
 
-### Health check
+### 2. Install Dependencies
 
 ```bash
-# Check container status
-docker ps
-
-# Get your IP
-ipconfig getifaddr en0
+make deps
 ```
 
-Visit `http://<your_ip>:6969` (or http://localhost:6969) in your browser.
+### 3. Build and Run
 
-> **Note:**  
-> On first run, you will be prompted to create an **admin account**. Other user accounts can be created later on.
-
-## Set system prompt
-
-Go to `Settings` > `General` > `System Prompt` and set it to your liking.
-
-```md
-You are the most efficient AI Assistant that answers following these principles:
-
-- Casual, straight-to-the-point responses.
-- Prioritise IT best practices and performance.
-- Provide trade-offs when applicable.
-- Fact-check and provide sources when needed.
+```bash
+make run
 ```
 
-## Advanced parameters
+The server will start on `http://localhost:8080`
 
-Go to `Settings` > `Advanced` and set the following parameters:  
-_so it knows how many R are in strawberry_
+### Build Binary
 
-```sh
-Mirostat: 0 # no randomness
-Top K: 10 # choose within the top 10 tokens
-Frequency Penalty: 1 # no recall/repeat
-Max tokens (num_predict): 4096 # to be safe
+To create a production binary:
+
+```bash
+make build
 ```
 
-## Enable Web Search
+The binary will be available at `bin/server`
 
-> **Note:**  
-> We are using Google Search Engine here, but other search engines are available. Full documentation is available [here](https://docs.openwebui.com/tutorials/web-search/google-pse/)
+## API Endpoints
 
-1. Create a [Google Custom Search Engine](https://programmablesearchengine.google.com/controlpanel/create)
-2. Grab the `Search Engine ID` created
-3. Get the `API Key` from [Custom Search JSON API](https://developers.google.com/custom-search/v1/introduction)
-
-Go to `Settings` > `Admin settings` > `Web Search`  
-Set the **Web Search Engine** to be `google_pse` and fill in the `API Key` and `Search Engine ID`.
-
-```sh
-Search Result Count: 5
-Concurrent Requests: 6
+### Health Check
+```http
+GET /api/v1/health
 ```
 
-# Indexing
-## Indexing github repositories
-TODO
-## Indexing local files
-TODO
+### Index GitHub Repository
+```http
+POST /api/v1/index-github
+Content-Type: application/json
 
-# RAG Orchestrator
-## Endpoints
-TODO
-## Open WebUI integration
-TODO
+{
+  "repository": "owner/repo",
+  "branch": "main"
+}
+```
+
+### Swagger Documentation
+```http
+GET /swagger/index.html
+```
+
+## Development
+
+### Run Tests
+```bash
+make test
+```
+
+### Format Code
+```bash
+make fmt
+```
+
+### Lint Code (requires golangci-lint)
+```bash
+make lint
+```
+
+### Clean Build Artifacts
+```bash
+make clean
+```
+
+## Configuration
+
+Default configuration:
+
+- **Server Port**: `8080`
+- **API Base Path**: `/api/v1`
+- **Swagger UI**: `/swagger/index.html`
+
+## License
+
+MIT License
+
