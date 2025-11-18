@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"local-ai/api"
+	"local-ai/internal/api"
 
 	_ "local-ai/docs" // This will import the auto-generated docs
 )
