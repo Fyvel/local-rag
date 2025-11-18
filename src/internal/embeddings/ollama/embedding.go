@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"indexing/internal/embeddings"
-	"indexing/internal/embeddings/request"
+	"local-ai/internal/embeddings"
+	"local-ai/internal/embeddings/request"
 	"net/http"
 	"net/url"
 )

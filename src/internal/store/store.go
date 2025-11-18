@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"indexing/internal/store/chroma"
+	"local-ai/internal/store/chroma"
 )
 
 type VectorStore struct {

@@ -1,8 +1,8 @@
 package ollama
 
 import (
-	"indexing/client"
-	"indexing/internal/embeddings"
+	"local-ai/internal/client"
+	"local-ai/internal/embeddings"
 )
 
 const (

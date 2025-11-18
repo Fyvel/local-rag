@@ -5,8 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"indexing/client"
 	"io"
+	"local-ai/internal/client"
 	"net/http"
 )
 

@@ -1,7 +1,7 @@
 package chroma
 
 import (
-	"indexing/client"
+	"local-ai/internal/client"
 )
 
 type Client struct {

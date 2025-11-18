@@ -2,7 +2,7 @@ package api
 
 import (
 	"fmt"
-	"indexing/internal/indexer"
+	"local-ai/internal/indexer"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

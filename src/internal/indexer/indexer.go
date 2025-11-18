@@ -9,12 +9,12 @@ import (
 
 	"github.com/tmc/langchaingo/textsplitter"
 
-	"indexing/client"
-	"indexing/internal/embeddings"
-	"indexing/internal/embeddings/ollama"
-	"indexing/internal/fetcher"
-	"indexing/internal/store"
-	"indexing/internal/store/chroma"
+	"local-ai/internal/client"
+	"local-ai/internal/embeddings"
+	"local-ai/internal/embeddings/ollama"
+	"local-ai/internal/fetcher"
+	"local-ai/internal/store"
+	"local-ai/internal/store/chroma"
 )
 
 type IndexerConfig struct {

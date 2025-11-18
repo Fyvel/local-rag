@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"indexing/api"
+	"local-ai/api"
 
-	_ "indexing/docs" // This will import the auto-generated docs
+	_ "local-ai/docs" // This will import the auto-generated docs
 )
 
 func main() {

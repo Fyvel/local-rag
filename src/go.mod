@@ -1,4 +1,4 @@
-module indexing
+module local-ai
 
 go 1.23.3
 
