@@ -15,8 +15,8 @@ import (
 	"local-ai/internal/embeddings"
 	"local-ai/internal/embeddings/ollama"
 	"local-ai/internal/fetcher"
+	"local-ai/internal/infra/store/chroma"
 	"local-ai/internal/store"
-	"local-ai/internal/store/chroma"
 )
 
 type IndexerConfig struct {

@@ -92,14 +92,18 @@ When generating or rewriting Go code:
    - Applied dependency inversion principle (domain defines interface, infrastructure implements)
    - Status: ✅ Compiles, no behavior changes
 
+5. **Move concrete store implementations to infra** (commit: `refactor: move ChromaDB implementation to infrastructure layer`)
+   - Moved `internal/store/chroma` → `internal/infra/store/chroma`
+   - Updated all imports from `store/chroma` to `infra/store/chroma`
+   - ChromaDB client now clearly organized as infrastructure adapter
+   - VectorStore remains in `store` package as adapter implementing domain interface
+   - Separated infrastructure concerns from domain/application layers
+   - Status: ✅ Compiles, no behavior changes
+
 ### 🎯 Recommended Next Steps
 The following steps maintain incremental progress toward DDD architecture:
 
-#### Next: Step 5 - Move concrete store implementations to infra
-- Reorganize `internal/store/chroma` → `internal/infra/store/chroma`
-- Keep VectorStore in `store` but aligned with domain interface
-
-#### Future: Step 6 - Introduce application use cases
+#### Next: Step 6 - Introduce application use cases
 - Create `application/indexing/index_repository.go` use case
 - Extract orchestration logic from `indexer.IndexGithubRepository`
 - Handler calls application use case instead of indexer directly

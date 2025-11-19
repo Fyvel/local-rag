@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"local-ai/internal/domain/documents"
-	"local-ai/internal/store/chroma"
+	"local-ai/internal/infra/store/chroma"
 )
 
 // VectorStore is an infrastructure implementation of the DocumentRepository interface.
