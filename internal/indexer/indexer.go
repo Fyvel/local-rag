@@ -11,6 +11,7 @@ import (
 
 	"local-ai/internal/client"
 	"local-ai/internal/domain/documents"
+	"local-ai/internal/domain/repositories"
 	"local-ai/internal/embeddings"
 	"local-ai/internal/embeddings/ollama"
 	"local-ai/internal/fetcher"
@@ -47,7 +48,7 @@ func IndexGithubRepository(
 	githubURL string,
 	fileTypes []string,
 	targetIndex string,
-) (fetcher.GithubRepository, error) {
+) (*repositories.Repository, error) {
 	config := DefaultConfig()
 
 	ctx, cancel := context.WithTimeout(ctx, config.OperationTimeout)
@@ -92,9 +93,9 @@ func IndexGithubRepository(
 	return indexer.processRepository(ctx, repo)
 }
 
-func (indexer *Indexer) processRepository(ctx context.Context, repository fetcher.GithubRepository) (fetcher.GithubRepository, error) {
+func (indexer *Indexer) processRepository(ctx context.Context, repository *repositories.Repository) (*repositories.Repository, error) {
 	var wg sync.WaitGroup
-	filesChan := make(chan fetcher.GithubFile, len(repository.Files))
+	filesChan := make(chan repositories.File, len(repository.Files))
 	errChan := make(chan error, len(repository.Files))
 
 	// Prepare error tracking
@@ -160,7 +161,7 @@ func (indexer *Indexer) processRepository(ctx context.Context, repository fetche
 }
 
 // processFile handles indexing of an individual file
-func (indexer *Indexer) processFile(ctx context.Context, repository fetcher.GithubRepository, file fetcher.GithubFile) error {
+func (indexer *Indexer) processFile(ctx context.Context, repository *repositories.Repository, file repositories.File) error {
 	// Context check
 	select {
 	case <-ctx.Done():

@@ -9,23 +9,13 @@ import (
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
+
+	"local-ai/internal/domain/repositories"
 )
 
-type GithubFile struct {
-	Path    string
-	Name    string
-	Type    string
-	Content string
-}
-
-type GithubRepository struct {
-	URL   string
-	Name  string
-	Files []GithubFile
-	SHA   string
-}
-
-func GetGithubRepository(ctx context.Context, githubURL string, fileTypes []string) (GithubRepository, error) {
+// GetGithubRepository fetches a GitHub repository and returns it as a domain Repository.
+// This is an infrastructure adapter that uses git operations to populate domain entities.
+func GetGithubRepository(ctx context.Context, githubURL string, fileTypes []string) (*repositories.Repository, error) {
 
 	var repoDir string
 	var repo *git.Repository
@@ -38,13 +28,13 @@ func GetGithubRepository(ctx context.Context, githubURL string, fileTypes []stri
 		repoDir = filepath.Join("/tmp/repos", segments[3], segments[4])
 
 		if err = os.MkdirAll(repoDir, 0755); err != nil {
-			return GithubRepository{}, fmt.Errorf("failed to create data directory: %w", err)
+			return nil, fmt.Errorf("failed to create data directory: %w", err)
 		}
 		fmt.Println("DEBUG: Using persistent repository directory:", repoDir)
 	} else {
 		// use temporary directory that gets cleaned up
 		if repoDir, err = os.MkdirTemp("", "github-repo-*"); err != nil {
-			return GithubRepository{}, fmt.Errorf("failed to create temp directory: %w", err)
+			return nil, fmt.Errorf("failed to create temp directory: %w", err)
 		}
 		defer os.RemoveAll(repoDir)
 	}
@@ -54,7 +44,7 @@ func GetGithubRepository(ctx context.Context, githubURL string, fileTypes []stri
 		fmt.Println("Using existing repository at", repoDir)
 		repo, err = git.PlainOpen(repoDir)
 		if err != nil {
-			return GithubRepository{}, fmt.Errorf("failed to open existing repository: %w", err)
+			return nil, fmt.Errorf("failed to open existing repository: %w", err)
 		}
 	} else {
 		fmt.Println("Clone repository started", githubURL)
@@ -64,27 +54,27 @@ func GetGithubRepository(ctx context.Context, githubURL string, fileTypes []stri
 		})
 		fmt.Println("Clone operation completed")
 		if err != nil {
-			return GithubRepository{}, fmt.Errorf("failed to clone repository: %w", err)
+			return nil, fmt.Errorf("failed to clone repository: %w", err)
 		}
 	}
 
 	headRef, err := repo.Head()
 	if err != nil {
-		return GithubRepository{}, fmt.Errorf("failed to get HEAD reference: %w", err)
+		return nil, fmt.Errorf("failed to get HEAD reference: %w", err)
 	}
 
 	commitRef, err := repo.CommitObject(headRef.Hash())
 	if err != nil {
-		return GithubRepository{}, fmt.Errorf("failed to get commit object: %w", err)
+		return nil, fmt.Errorf("failed to get commit object: %w", err)
 	}
 
 	tree, err := commitRef.Tree()
 	if err != nil {
-		return GithubRepository{}, fmt.Errorf("failed to get commit tree: %w", err)
+		return nil, fmt.Errorf("failed to get commit tree: %w", err)
 	}
 
 	// Walk the tree and collect files with matching file types
-	var files []GithubFile
+	var files []repositories.File
 	err = tree.Files().ForEach(func(f *object.File) error {
 		if shouldIncludeFile(f.Name, fileTypes) {
 			content, err := f.Contents()
@@ -92,7 +82,7 @@ func GetGithubRepository(ctx context.Context, githubURL string, fileTypes []stri
 				return fmt.Errorf("failed to read file %s: %w", f.Name, err)
 			}
 
-			files = append(files, GithubFile{
+			files = append(files, repositories.File{
 				Path:    f.Name,
 				Name:    filepath.Base(f.Name),
 				Type:    filepath.Ext(f.Name),
@@ -102,10 +92,10 @@ func GetGithubRepository(ctx context.Context, githubURL string, fileTypes []stri
 		return nil
 	})
 	if err != nil {
-		return GithubRepository{}, fmt.Errorf("failed to iterate files: %w", err)
+		return nil, fmt.Errorf("failed to iterate files: %w", err)
 	}
 
-	return GithubRepository{
+	return &repositories.Repository{
 		Name:  repoDir,
 		Files: files,
 		SHA:   headRef.Hash().String(),

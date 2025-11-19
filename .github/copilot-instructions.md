@@ -72,34 +72,39 @@ When generating or rewriting Go code:
    - Updated tests to use domain types
    - Status: ✅ Compiles, tests pass, no behavior changes
 
+3. **Extract Repository domain entities** (commit: `refactor: extract Repository domain entities into domain layer`)
+   - Created `internal/domain/repositories/repository.go`
+   - Moved `GithubRepository` → `Repository` and `GithubFile` → `File` to domain
+   - Changed `Repository` to be an aggregate root containing `File` entities
+   - Added domain methods: `FileCount()`, `HasFiles()`
+   - Updated `fetcher.GetGithubRepository` to return `*repositories.Repository`
+   - Updated `indexer` to work with domain repository types
+   - Kept git/filesystem operations in `fetcher` (infrastructure adapter)
+   - Status: ✅ Compiles, no behavior changes
+
 ### 🎯 Recommended Next Steps
 The following steps maintain incremental progress toward DDD architecture:
 
-#### Next - Extract Repository domain entities
-- Move `GithubRepository` and `GithubFile` from `fetcher` to `domain/repositories`
-- These are domain concepts, not infrastructure
-- Keep git/filesystem operations in `fetcher` as infrastructure
-
-#### Future: Step - Extract Repository domain entities
-- Move `GithubRepository` and `GithubFile` from `fetcher` to `domain/repositories`
-- These are domain concepts, not infrastructure
-- Keep git/filesystem operations in `fetcher` as infrastructure
-
-#### Future: Step - Define repository interfaces in domain
+#### Next: Step 4 - Define repository interfaces in domain
 - Create `domain/documents/repository.go` with DocumentRepository interface
 - Define methods: Add, Remove, Query, etc.
 - Move interface to domain, keep implementation in `store`
 
-#### Future: Step - Move concrete store implementations to infra
+#### Future: Step 5 - Define repository interfaces in domain
+- Create `domain/documents/repository.go` with DocumentRepository interface
+- Define methods: Add, Remove, Query, etc.
+- Move interface to domain, keep implementation in `store`
+
+#### Future: Step 6 - Move concrete store implementations to infra
 - Reorganize `internal/store/chroma` → `internal/infra/store/chroma`
 - Keep VectorStore in `store` but aligned with domain interface
 
-#### Future: Step - Introduce application use cases
+#### Future: Step 7 - Introduce application use cases
 - Create `application/indexing/index_repository.go` use case
 - Extract orchestration logic from `indexer.IndexGithubRepository`
 - Handler calls application use case instead of indexer directly
 
-#### Future: Step - Domain services for business logic
+#### Future: Step 8 - Domain services for business logic
 - Extract validation, chunking logic into domain services
 - Move embedding coordination into domain service
 
