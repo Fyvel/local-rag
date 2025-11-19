@@ -1,147 +1,105 @@
 # Copilot Refactoring Instructions (Go + DDD Migration)
 
 ## Goal
-Incrementally refactor the existing Go codebase toward a Domain-Driven Design (DDD) architecture.  
-Each refactoring step must:
-- Produce compiling, runnable code.
-- Be small enough to commit independently.
-- Preserve existing behavior unless explicitly modifying it.
-- Improve structure, boundaries, and domain clarity.
+Incrementally refactor the Go codebase into a clean Domain-Driven Design (DDD) architecture using the final folder structure:
 
-## Architectural Direction
-The target architecture uses:
-- **Api**: REST API handlers, routing, request/response types.
-- **Domain**: Entities, value objects, domain services, domain errors, aggregates.
-- **Application**: Use cases, orchestrating domain logic, DTOs.
-- **Infrastructure**: Repositories, persistence adapters, external services, frameworks.
+- `api/` — HTTP, gRPC, CLI, or any delivery layer.
+- `application/` — use cases, orchestrators, DTOs, application services.
+- `domain/` — entities, value objects, aggregates, domain services, domain errors, repository interfaces.
+- `infra/` — concrete implementations: database adapters, external clients, messaging, logging.
+- `di/` — composition root: wiring dependencies (manual or with a DI tool).
 
-Use package naming aligned with features/context (e.g., `chat`, `documents`, `embeddings`, `tools`), not technical layers alone.
-Avoid circular dependencies; domain must not depend on infrastructure.
+The end state must:
+- Keep the project compiling at every step.
+- Preserve behavior unless intentionally modified.
+- Follow Go idioms: small packages, clear naming, minimal interfaces, explicit dependencies.
+- Fully relocate code to the structure above and remove obsolete folders.
+
+## Architectural Expectations
+**Domain**
+- Must be framework-agnostic.
+- Must not import `infra`, `api`, or `application`.
+- Define repository and service interfaces only when required by domain rules.
+- Model aggregates carefully; keep invariants inside domain constructors and methods.
+
+**Application**
+- Calls domain services and repositories.
+- Contains use cases, commands, queries, orchestrators.
+- Translates between API DTOs and domain objects.
+
+**Infra**
+- Concrete implementations for repositories, external services, and technical details.
+- Keep infra-specific errors wrapped and translated into domain/application errors at boundaries.
+
+**API**
+- Only delivery concerns: HTTP routing, JSON encoding/decoding, gRPC definitions, CLI commands.
+- No business logic.
+
+**DI**
+- Central initialization: constructing services, repositories, handlers, application use cases.
+- No domain logic here.
 
 ## Refactoring Rules
-When suggesting code changes, Copilot should:
-1. **Propose small, incremental steps**
-   - One clear responsibility per commit.
-   - Example commit types: extract domain model, isolate repository interface, move business logic into domain service, introduce application command/query, etc.
+To propose or apply changes, Copilot should:
 
-2. **Ensure the build stays green**
-   - No broken imports.
-   - No placeholder stubs that break compilation.  
-   - If a dependency is not implemented yet, provide a minimal working implementation.
+1. **Work incrementally**
+   - One clear boundary improvement per iteration.
+   - Produce compiling, runnable code at each step.
+   - Avoid speculative abstractions.
 
-3. **Protect existing behavior**
-   - Maintain API signatures unless refactoring requires otherwise.
-   - Migrate logic without altering semantics.
+2. **Prioritize structure clarity**
+   - Move code into `domain` first (entities, logic).
+   - Introduce `application` when orchestrations emerge.
+   - Create `infra` when relocating DB or external integrations.
+   - Move handlers/controllers into `api`.
+   - Centralize wiring into `di`.
 
-4. **Promote clean boundaries**
-   - Push business rules into the domain layer.
-   - Move technical code out of the domain.
-   - Introduce interfaces only where they provide clear value.
+3. **Finalization phase**
+   Copilot must:
+   - Identify any remaining files outside the target folders.
+   - Relocate them to the appropriate layer.
+   - Remove old or duplicate folders.
+   - Rename packages to follow Go conventions (lowercase, no plural unless meaningful, cohesive packages).
+   - Update imports across the project.
+   - Ensure no circular dependencies remain.
+   - Clean up any leftover transitional code or adapters.
 
-5. **Encourage Go best practices**
-   - Keep packages small and composable.
-   - Avoid unnecessary abstractions.
-   - Favor simple constructors and explicit dependencies.
-   - Optimize for readability and runtime efficiency.
+4. **Go conventions**
+   - Keep package names concise and domain-oriented.
+   - Avoid overly deep package hierarchies.
+   - Avoid stuttered names (e.g., `order.OrderService` is preferred over `order.OrderDomainService`).
+   - Prefer small, explicit interfaces placed where they are consumed.
 
-## Code Generation Guidelines
-When generating or rewriting Go code:
-- Prefer pure functions and immutable value objects when feasible.
-- Keep dependencies injected, not global.
-- Avoid large god-structs; keep aggregates tight.
-- Avoid leaking infrastructure concerns into domain types.
-- Handle errors explicitly and clearly.
+5. **Preserve behavior**
+   - Refactor structure, not semantics.
+   - Maintain handler signatures unless intentionally adjusting APIs.
+   - Keep tests running; update them as directories move.
 
-## Refactoring Progress
+## Code Generation Expectations
+Generated or updated code must:
+- Be complete, not pseudocode.
+- Include minimal working implementations when required (no broken stubs).
+- Use clear constructors for services and aggregates.
+- Avoid unnecessary generics or abstractions.
+- Respect runtime efficiency and error clarity.
 
-### ✅ Completed Steps
-1. **Extract Document entity to domain layer** (commit: `refactor: extract Document entity into domain layer`)
-   - Created `internal/domain/documents/document.go`
-   - Moved Document struct from `store` package to domain
-   - Moved ID generation functions (GenerateID, GenerateDeterministicID) to domain
-   - Updated `store.VectorStore` and `indexer` to use `domain.Document`
-   - Status: ✅ Compiles, no behavior changes
+## Step-by-Step Iteration Examples
+Examples of valid steps:
+- Extract an entity or value object into `domain/<context>`.
+- Move business logic from handlers/controllers to a domain service.
+- Introduce a repository interface in `domain`, then move DB code to `infra`.
+- Create an application use case and update the API handler to call it.
+- Introduce a `di` package and consolidate object construction.
+- Relocate leftover utility packages to their correct layers or remove them.
+- Normalize naming and imports after full folder relocation.
 
-2. **Extract Embedding value object to domain layer** (commit: `refactor: extract Embedding value object into domain layer`)
-   - Created `internal/domain/embeddings/embedding.go`
-   - Moved Embedding struct from `embeddings` package to domain
-   - Moved Base64String type and Decode logic to domain
-   - Added NewEmbedding constructor with validation and immutability
-   - Kept `Embedder[T]` interface in embeddings package (infrastructure-facing)
-   - Updated `ollama` package to use `domain/embeddings.Embedding`
-   - Updated tests to use domain types
-   - Status: ✅ Compiles, tests pass, no behavior changes
+Each step should end with compiling code and a suggested commit message.
 
-3. **Extract Repository domain entities** (commit: `refactor: extract Repository domain entities into domain layer`)
-   - Created `internal/domain/repositories/repository.go`
-   - Moved `GithubRepository` → `Repository` and `GithubFile` → `File` to domain
-   - Changed `Repository` to be an aggregate root containing `File` entities
-   - Added domain methods: `FileCount()`, `HasFiles()`
-   - Updated `fetcher.GetGithubRepository` to return `*repositories.Repository`
-   - Updated `indexer` to work with domain repository types
-   - Kept git/filesystem operations in `fetcher` (infrastructure adapter)
-   - Status: ✅ Compiles, no behavior changes
-
-4. **Define repository interfaces in domain** (commit: `refactor: define DocumentRepository interface in domain`)
-   - Created `internal/domain/documents/repository.go` with DocumentRepository interface
-   - Defined interface methods: AddDocument, RemoveDocument, Query
-   - Updated `store.VectorStore` to implement DocumentRepository interface
-   - Modified RemoveDocument to accept context parameter
-   - Modified Query to return interface{} for infrastructure flexibility
-   - Updated `indexer.Indexer` to depend on DocumentRepository interface instead of concrete VectorStore
-   - Applied dependency inversion principle (domain defines interface, infrastructure implements)
-   - Status: ✅ Compiles, no behavior changes
-
-5. **Move concrete store implementations to infra** (commit: `refactor: move ChromaDB implementation to infrastructure layer`)
-   - Moved `internal/store/chroma` → `internal/infra/store/chroma`
-   - Updated all imports from `store/chroma` to `infra/store/chroma`
-   - ChromaDB client now clearly organized as infrastructure adapter
-   - VectorStore remains in `store` package as adapter implementing domain interface
-   - Separated infrastructure concerns from domain/application layers
-   - Status: ✅ Compiles, no behavior changes
-
-6. **Introduce application use cases** (commit: `refactor: introduce application layer with IndexRepositoryUseCase`)
-   - Created `internal/application/indexing/index_repository.go`
-   - Introduced `IndexRepositoryUseCase` to orchestrate repository indexing workflow
-   - Defined `IndexRepositoryCommand` and `IndexRepositoryResult` DTOs
-   - Introduced `RepositoryFetcher` interface for dependency abstraction
-   - Exported `indexer.ProcessRepository` method for use by application layer
-   - Updated API handler to use application use case instead of calling indexer directly
-   - Separated orchestration (application) from low-level processing (indexer)
-   - Status: ✅ Compiles, no behavior changes
-
-7. **Domain services for business logic** (commit: `refactor: introduce DocumentService for domain business logic`)
-   - Created `internal/domain/documents/service.go` with DocumentService
-   - Introduced `ChunkMetadata` struct to encapsulate chunk origin information
-   - Extracted document creation logic into `CreateDocumentFromChunk` domain method
-   - Extracted validation logic into `ValidateDocument` domain method
-   - Updated `Indexer` to use `DocumentService` for document operations
-   - Moved business rules (ID generation, metadata enrichment, timestamping) into domain
-   - Removed direct document construction from infrastructure layer
-   - Status: ✅ Compiles, no behavior changes
-
-### 🎯 Architecture Complete
-The codebase now follows Domain-Driven Design (DDD) and Clean Architecture principles:
-
-**Layers Established:**
-- ✅ **Domain**: Entities, value objects, domain services, repository interfaces
-- ✅ **Application**: Use cases orchestrating workflows across domain and infrastructure
-- ✅ **Infrastructure**: Concrete implementations (ChromaDB, Ollama, GitHub fetcher)
-- ✅ **API**: HTTP handlers delegating to application layer
-
-**Key Achievements:**
-- Clear separation of concerns across all layers
-- Dependency inversion with domain defining interfaces
-- Business logic encapsulated in domain services
-- Infrastructure details isolated from domain and application
-- Use cases provide reusable workflows independent of delivery mechanism
-
-Each step should end with compiling code and an example commit message.
-
-## Output Formatting
-Copilot responses should include:
-- A short explanation of the proposed incremental change.
-- Updated or newly created files with complete code blocks.
-- A suggested commit message.
-- Notes about trade-offs or impacts when relevant.
+## Output Format
+Copilot responses must include:
+1. A short explanation of the change.
+2. Complete code blocks for modified or new files.
+3. Files that must be deleted or moved.
+4. A suggested commit message.
+5. Notes on trade-offs when relevant.
 
