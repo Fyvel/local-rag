@@ -82,29 +82,29 @@ When generating or rewriting Go code:
    - Kept git/filesystem operations in `fetcher` (infrastructure adapter)
    - Status: ✅ Compiles, no behavior changes
 
+4. **Define repository interfaces in domain** (commit: `refactor: define DocumentRepository interface in domain`)
+   - Created `internal/domain/documents/repository.go` with DocumentRepository interface
+   - Defined interface methods: AddDocument, RemoveDocument, Query
+   - Updated `store.VectorStore` to implement DocumentRepository interface
+   - Modified RemoveDocument to accept context parameter
+   - Modified Query to return interface{} for infrastructure flexibility
+   - Updated `indexer.Indexer` to depend on DocumentRepository interface instead of concrete VectorStore
+   - Applied dependency inversion principle (domain defines interface, infrastructure implements)
+   - Status: ✅ Compiles, no behavior changes
+
 ### 🎯 Recommended Next Steps
 The following steps maintain incremental progress toward DDD architecture:
 
-#### Next: Step 4 - Define repository interfaces in domain
-- Create `domain/documents/repository.go` with DocumentRepository interface
-- Define methods: Add, Remove, Query, etc.
-- Move interface to domain, keep implementation in `store`
-
-#### Future: Step 5 - Define repository interfaces in domain
-- Create `domain/documents/repository.go` with DocumentRepository interface
-- Define methods: Add, Remove, Query, etc.
-- Move interface to domain, keep implementation in `store`
-
-#### Future: Step 6 - Move concrete store implementations to infra
+#### Next: Step 5 - Move concrete store implementations to infra
 - Reorganize `internal/store/chroma` → `internal/infra/store/chroma`
 - Keep VectorStore in `store` but aligned with domain interface
 
-#### Future: Step 7 - Introduce application use cases
+#### Future: Step 6 - Introduce application use cases
 - Create `application/indexing/index_repository.go` use case
 - Extract orchestration logic from `indexer.IndexGithubRepository`
 - Handler calls application use case instead of indexer directly
 
-#### Future: Step 8 - Domain services for business logic
+#### Future: Step 7 - Domain services for business logic
 - Extract validation, chunking logic into domain services
 - Move embedding coordination into domain service
 

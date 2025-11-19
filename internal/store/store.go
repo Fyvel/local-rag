@@ -8,10 +8,14 @@ import (
 	"local-ai/internal/store/chroma"
 )
 
+// VectorStore is an infrastructure implementation of the DocumentRepository interface.
+// It uses ChromaDB as the underlying vector database.
 type VectorStore struct {
 	client       *chroma.Client
 	collectionID string
 }
+
+var _ documents.DocumentRepository = (*VectorStore)(nil)
 
 func NewVectorStore(opts ...chroma.Option) *VectorStore {
 	client := chroma.NewClient(opts...)
@@ -49,8 +53,7 @@ func (vs *VectorStore) AddDocument(ctx context.Context, doc *documents.Document)
 	return true, nil
 }
 
-func (vs *VectorStore) RemoveDocument(docID string) (bool, error) {
-	ctx := context.Background()
+func (vs *VectorStore) RemoveDocument(ctx context.Context, docID string) (bool, error) {
 	err := vs.client.DeleteDocuments(ctx, vs.collectionID, []string{docID})
 	if err != nil {
 		return false, fmt.Errorf("failed to remove document: %w", err)
@@ -59,7 +62,7 @@ func (vs *VectorStore) RemoveDocument(docID string) (bool, error) {
 	return true, nil
 }
 
-func (vs *VectorStore) Query(ctx context.Context, embedding []float64, limit int) ([]chroma.QueryResult, error) {
+func (vs *VectorStore) Query(ctx context.Context, embedding []float64, limit int) (interface{}, error) {
 	return vs.client.Query(ctx, vs.collectionID, embedding, limit)
 }
 

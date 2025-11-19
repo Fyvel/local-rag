@@ -38,7 +38,7 @@ func DefaultConfig() IndexerConfig {
 
 type Indexer struct {
 	TextSplitter *textsplitter.MarkdownTextSplitter
-	VectorStore  *store.VectorStore
+	VectorStore  documents.DocumentRepository
 	Embedding    embeddings.Embedder[*ollama.EmbeddingRequest]
 	Config       IndexerConfig
 }
