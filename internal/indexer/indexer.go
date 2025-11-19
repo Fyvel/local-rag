@@ -37,10 +37,11 @@ func DefaultConfig() IndexerConfig {
 }
 
 type Indexer struct {
-	TextSplitter *textsplitter.MarkdownTextSplitter
-	VectorStore  documents.DocumentRepository
-	Embedding    embeddings.Embedder[*ollama.EmbeddingRequest]
-	Config       IndexerConfig
+	TextSplitter    *textsplitter.MarkdownTextSplitter
+	VectorStore     documents.DocumentRepository
+	Embedding       embeddings.Embedder[*ollama.EmbeddingRequest]
+	DocumentService *documents.DocumentService
+	Config          IndexerConfig
 }
 
 func IndexGithubRepository(
@@ -83,10 +84,11 @@ func IndexGithubRepository(
 	)
 
 	indexer := &Indexer{
-		TextSplitter: splitter,
-		VectorStore:  vs,
-		Embedding:    embedding,
-		Config:       config,
+		TextSplitter:    splitter,
+		VectorStore:     vs,
+		Embedding:       embedding,
+		DocumentService: documents.NewDocumentService(),
+		Config:          config,
 		// Logger:       logger,
 	}
 
@@ -176,35 +178,43 @@ func (indexer *Indexer) processFile(ctx context.Context, repository *repositorie
 		}
 
 		for chunkIndex, chunk := range chunks {
+			// Generate embedding for the chunk
 			embedding, err := indexer.Embedding.Embed(ctx, &ollama.EmbeddingRequest{
 				Prompt: chunk,
 				Model:  "mxbai-embed-large",
 			})
-
 			if err != nil {
 				return fmt.Errorf("embedding failed for file %s, chunk %d: %w", file.Name, chunkIndex, err)
 			}
 
-			docIdStr := fmt.Sprintf("%s:%s:%s:%d", repository.Name, repository.SHA, file.Path, chunkIndex)
-
-			doc := &documents.Document{
-				ID:         documents.GenerateDeterministicID(docIdStr),
-				Content:    chunk,
-				Embeddings: embedding[0].Vector,
-				Metadata: map[string]any{
-					"file":        file.Name,
-					"filePath":    file.Path,
-					"fileType":    file.Type,
-					"fileSize":    len(file.Content),
-					"chunkIndex":  chunkIndex,
-					"totalChunks": len(chunks),
-					"githubURL":   repository.URL,
-					"repoName":    repository.Name,
-					"commitSHA":   repository.SHA,
-					"indexedAt":   time.Now().Format(time.RFC3339),
-				},
+			// Use domain service to create document from chunk
+			metadata := documents.ChunkMetadata{
+				FileName:       file.Name,
+				FilePath:       file.Path,
+				FileType:       file.Type,
+				FileSize:       len(file.Content),
+				ChunkIndex:     chunkIndex,
+				TotalChunks:    len(chunks),
+				RepositoryURL:  repository.URL,
+				RepositoryName: repository.Name,
+				CommitSHA:      repository.SHA,
 			}
 
+			doc, err := indexer.DocumentService.CreateDocumentFromChunk(
+				chunk,
+				embedding[0].Vector,
+				metadata,
+			)
+			if err != nil {
+				return fmt.Errorf("failed to create document for file %s, chunk %d: %w", file.Name, chunkIndex, err)
+			}
+
+			// Validate document using domain service
+			if err := indexer.DocumentService.ValidateDocument(doc); err != nil {
+				return fmt.Errorf("document validation failed for file %s, chunk %d: %w", file.Name, chunkIndex, err)
+			}
+
+			// Store document
 			if _, err := indexer.VectorStore.AddDocument(ctx, doc); err != nil {
 				return fmt.Errorf("failed to add document to vector store: %w", err)
 			}

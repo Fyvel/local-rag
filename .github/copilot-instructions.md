@@ -110,12 +110,31 @@ When generating or rewriting Go code:
    - Separated orchestration (application) from low-level processing (indexer)
    - Status: ✅ Compiles, no behavior changes
 
-### 🎯 Recommended Next Steps
-The following steps maintain incremental progress toward DDD architecture:
+7. **Domain services for business logic** (commit: `refactor: introduce DocumentService for domain business logic`)
+   - Created `internal/domain/documents/service.go` with DocumentService
+   - Introduced `ChunkMetadata` struct to encapsulate chunk origin information
+   - Extracted document creation logic into `CreateDocumentFromChunk` domain method
+   - Extracted validation logic into `ValidateDocument` domain method
+   - Updated `Indexer` to use `DocumentService` for document operations
+   - Moved business rules (ID generation, metadata enrichment, timestamping) into domain
+   - Removed direct document construction from infrastructure layer
+   - Status: ✅ Compiles, no behavior changes
 
-#### Next: Step 7 - Domain services for business logic
-- Extract validation, chunking logic into domain services
-- Move embedding coordination into domain service
+### 🎯 Architecture Complete
+The codebase now follows Domain-Driven Design (DDD) and Clean Architecture principles:
+
+**Layers Established:**
+- ✅ **Domain**: Entities, value objects, domain services, repository interfaces
+- ✅ **Application**: Use cases orchestrating workflows across domain and infrastructure
+- ✅ **Infrastructure**: Concrete implementations (ChromaDB, Ollama, GitHub fetcher)
+- ✅ **API**: HTTP handlers delegating to application layer
+
+**Key Achievements:**
+- Clear separation of concerns across all layers
+- Dependency inversion with domain defining interfaces
+- Business logic encapsulated in domain services
+- Infrastructure details isolated from domain and application
+- Use cases provide reusable workflows independent of delivery mechanism
 
 Each step should end with compiling code and an example commit message.
 

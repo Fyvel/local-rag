@@ -106,10 +106,11 @@ func (uc *IndexRepositoryUseCase) Execute(ctx context.Context, cmd IndexReposito
 	fmt.Printf("Files found: %d\n", repo.FileCount())
 
 	idx := &indexer.Indexer{
-		TextSplitter: uc.textSplitter,
-		VectorStore:  uc.documentRepo,
-		Embedding:    uc.embedder,
-		Config:       uc.config,
+		TextSplitter:    uc.textSplitter,
+		VectorStore:     uc.documentRepo,
+		Embedding:       uc.embedder,
+		DocumentService: documents.NewDocumentService(),
+		Config:          uc.config,
 	}
 
 	fmt.Println("Starting indexing process...")
