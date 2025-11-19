@@ -62,35 +62,44 @@ When generating or rewriting Go code:
    - Updated `store.VectorStore` and `indexer` to use `domain.Document`
    - Status: ✅ Compiles, no behavior changes
 
+2. **Extract Embedding value object to domain layer** (commit: `refactor: extract Embedding value object into domain layer`)
+   - Created `internal/domain/embeddings/embedding.go`
+   - Moved Embedding struct from `embeddings` package to domain
+   - Moved Base64String type and Decode logic to domain
+   - Added NewEmbedding constructor with validation and immutability
+   - Kept `Embedder[T]` interface in embeddings package (infrastructure-facing)
+   - Updated `ollama` package to use `domain/embeddings.Embedding`
+   - Updated tests to use domain types
+   - Status: ✅ Compiles, tests pass, no behavior changes
+
 ### 🎯 Recommended Next Steps
 The following steps maintain incremental progress toward DDD architecture:
 
-#### Next: Step 2 - Extract Embedding value object to domain
-- Move `Embedding` struct from `embeddings` package to `domain/embeddings`
-- Move Base64 decoder logic as a domain method
-- Keep `Embedder[T]` interface in embeddings (it's infrastructure-facing)
-- Update references in `ollama` package and others
-
-#### Future: Step 3 - Extract Repository domain entities
+#### Next - Extract Repository domain entities
 - Move `GithubRepository` and `GithubFile` from `fetcher` to `domain/repositories`
 - These are domain concepts, not infrastructure
 - Keep git/filesystem operations in `fetcher` as infrastructure
 
-#### Future: Step 4 - Define repository interfaces in domain
+#### Future: Step - Extract Repository domain entities
+- Move `GithubRepository` and `GithubFile` from `fetcher` to `domain/repositories`
+- These are domain concepts, not infrastructure
+- Keep git/filesystem operations in `fetcher` as infrastructure
+
+#### Future: Step - Define repository interfaces in domain
 - Create `domain/documents/repository.go` with DocumentRepository interface
 - Define methods: Add, Remove, Query, etc.
 - Move interface to domain, keep implementation in `store`
 
-#### Future: Step 5 - Move concrete store implementations to infra
+#### Future: Step - Move concrete store implementations to infra
 - Reorganize `internal/store/chroma` → `internal/infra/store/chroma`
 - Keep VectorStore in `store` but aligned with domain interface
 
-#### Future: Step 6 - Introduce application use cases
+#### Future: Step - Introduce application use cases
 - Create `application/indexing/index_repository.go` use case
 - Extract orchestration logic from `indexer.IndexGithubRepository`
 - Handler calls application use case instead of indexer directly
 
-#### Future: Step 7 - Domain services for business logic
+#### Future: Step - Domain services for business logic
 - Extract validation, chunking logic into domain services
 - Move embedding coordination into domain service
 

@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"local-ai/internal/embeddings"
-	"local-ai/internal/embeddings/request"
 	"net/http"
 	"net/url"
+
+	"local-ai/internal/domain/embeddings"
+	"local-ai/internal/embeddings/request"
 )
 
 // EmbeddingRequest is serialized and sent to the API server.

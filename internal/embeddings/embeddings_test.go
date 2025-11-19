@@ -3,10 +3,12 @@ package embeddings
 import (
 	"reflect"
 	"testing"
+
+	"local-ai/internal/domain/embeddings"
 )
 
 func TestToFloat32(t *testing.T) {
-	e := Embedding{
+	e := embeddings.Embedding{
 		Vector: []float64{1.0, 2.0, 3.0},
 	}
 
@@ -49,7 +51,7 @@ func TestBase64Decode(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			embBase64 := Base64(tc.given)
+			embBase64 := embeddings.Base64String(tc.given)
 			got, err := embBase64.Decode()
 			if err != nil {
 				if !tc.wantErr {
