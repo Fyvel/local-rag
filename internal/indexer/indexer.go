@@ -90,10 +90,10 @@ func IndexGithubRepository(
 		// Logger:       logger,
 	}
 
-	return indexer.processRepository(ctx, repo)
+	return indexer.ProcessRepository(ctx, repo)
 }
 
-func (indexer *Indexer) processRepository(ctx context.Context, repository *repositories.Repository) (*repositories.Repository, error) {
+func (indexer *Indexer) ProcessRepository(ctx context.Context, repository *repositories.Repository) (*repositories.Repository, error) {
 	var wg sync.WaitGroup
 	filesChan := make(chan repositories.File, len(repository.Files))
 	errChan := make(chan error, len(repository.Files))

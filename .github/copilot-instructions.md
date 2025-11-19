@@ -100,15 +100,20 @@ When generating or rewriting Go code:
    - Separated infrastructure concerns from domain/application layers
    - Status: ✅ Compiles, no behavior changes
 
+6. **Introduce application use cases** (commit: `refactor: introduce application layer with IndexRepositoryUseCase`)
+   - Created `internal/application/indexing/index_repository.go`
+   - Introduced `IndexRepositoryUseCase` to orchestrate repository indexing workflow
+   - Defined `IndexRepositoryCommand` and `IndexRepositoryResult` DTOs
+   - Introduced `RepositoryFetcher` interface for dependency abstraction
+   - Exported `indexer.ProcessRepository` method for use by application layer
+   - Updated API handler to use application use case instead of calling indexer directly
+   - Separated orchestration (application) from low-level processing (indexer)
+   - Status: ✅ Compiles, no behavior changes
+
 ### 🎯 Recommended Next Steps
 The following steps maintain incremental progress toward DDD architecture:
 
-#### Next: Step 6 - Introduce application use cases
-- Create `application/indexing/index_repository.go` use case
-- Extract orchestration logic from `indexer.IndexGithubRepository`
-- Handler calls application use case instead of indexer directly
-
-#### Future: Step 7 - Domain services for business logic
+#### Next: Step 7 - Domain services for business logic
 - Extract validation, chunking logic into domain services
 - Move embedding coordination into domain service
 

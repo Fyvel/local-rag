@@ -2,10 +2,11 @@ package api
 
 import (
 	"fmt"
-	"local-ai/internal/indexer"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+
+	"local-ai/internal/application/indexing"
 )
 
 type IndexGithubRepoRequest struct {
@@ -54,7 +55,21 @@ func IndexGithubHandler(c *gin.Context) {
 		return
 	}
 
-	_, err := indexer.IndexGithubRepository(c.Request.Context(), req.GithubURL, req.FileTypes, req.TargetIndex)
+	// Create use case with dependencies
+	useCase := indexing.NewIndexRepositoryUseCase(
+		req.TargetIndex,
+		"http://localhost:8000",      // ChromaDB URL
+		"http://localhost:11434/api", // Ollama URL
+	)
+
+	// Execute use case
+	cmd := indexing.IndexRepositoryCommand{
+		GithubURL:   req.GithubURL,
+		FileTypes:   req.FileTypes,
+		TargetIndex: req.TargetIndex,
+	}
+
+	result, err := useCase.Execute(c.Request.Context(), cmd)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, ErrorResponse{
 			Success: false,
@@ -66,7 +81,7 @@ func IndexGithubHandler(c *gin.Context) {
 	c.JSON(http.StatusCreated, SuccessResponse[IndexGithubRepoResponse]{
 		Success: true,
 		Data: IndexGithubRepoResponse{
-			IndexID: req.TargetIndex,
+			IndexID: result.IndexID,
 		},
 	})
 }
