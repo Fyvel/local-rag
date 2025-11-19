@@ -1,11 +1,11 @@
 package chroma
 
 import (
-	"local-ai/internal/client"
+	"local-ai/internal/infra/httpclient"
 )
 
 type Client struct {
-	httpClient *client.HTTP
+	httpClient *httpclient.Client
 	baseURL    string
 	tenant     string
 	database   string
@@ -21,7 +21,7 @@ func WithChromaURL(url string) Option {
 	}
 }
 
-func WithHTTPClient(httpClient *client.HTTP) Option {
+func WithHTTPClient(httpClient *httpclient.Client) Option {
 	return func(c *Client) {
 		c.httpClient = httpClient
 	}
@@ -63,7 +63,7 @@ func NewClient(opts ...Option) *Client {
 	}
 
 	if c.httpClient == nil {
-		c.httpClient = client.NewHTTP()
+		c.httpClient = httpclient.New()
 	}
 
 	return c

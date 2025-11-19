@@ -1,4 +1,4 @@
-package store
+package vectorstore
 
 import (
 	"context"
@@ -17,7 +17,7 @@ type VectorStore struct {
 
 var _ documents.DocumentRepository = (*VectorStore)(nil)
 
-func NewVectorStore(opts ...chroma.Option) *VectorStore {
+func New(opts ...chroma.Option) *VectorStore {
 	client := chroma.NewClient(opts...)
 
 	ctx := context.Background()
@@ -64,11 +64,4 @@ func (vs *VectorStore) RemoveDocument(ctx context.Context, docID string) (bool, 
 
 func (vs *VectorStore) Query(ctx context.Context, embedding []float64, limit int) (interface{}, error) {
 	return vs.client.Query(ctx, vs.collectionID, embedding, limit)
-}
-
-type RepositoryRecord struct {
-	IndexId   string
-	Url       string
-	SHA       string
-	UpdatedAt string
 }

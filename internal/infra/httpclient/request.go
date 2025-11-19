@@ -1,4 +1,4 @@
-package request
+package httpclient
 
 import (
 	"bytes"
@@ -6,17 +6,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"local-ai/internal/client"
 	"net/http"
 )
 
-// NewHTTP creates a new HTTP request from the provided parameters  and returns it.
+// NewRequest creates a new HTTP request from the provided parameters and returns it.
 // If the passed in context is nil, it creates a new background context.
 // If the provided body is nil, it gets initialized to bytes.Reader.
 // By default the following headers are set:
 // * Accept: application/json; charset=utf-8
 // If no Content-Type has been set via options it defaults to application/json.
-func NewHTTP(ctx context.Context, method, url string, body io.Reader, opts ...Option) (*http.Request, error) {
+func NewRequest(ctx context.Context, method, url string, body io.Reader, opts ...RequestOption) (*http.Request, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -43,7 +42,7 @@ func NewHTTP(ctx context.Context, method, url string, body io.Reader, opts ...Op
 }
 
 // Do sends the HTTP request req using the client and returns the response.
-func Do[T error](client *client.HTTP, req *http.Request) (*http.Response, error) {
+func Do[T error](client *Client, req *http.Request) (*http.Response, error) {
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
@@ -61,11 +60,11 @@ func Do[T error](client *client.HTTP, req *http.Request) (*http.Response, error)
 	return nil, apiErr
 }
 
-// Option is http request functional option.
-type Option func(*http.Request)
+// RequestOption is http request functional option.
+type RequestOption func(*http.Request)
 
 // WithBearer sets the Authorization header to the provided Bearer token.
-func WithBearer(token string) Option {
+func WithBearer(token string) RequestOption {
 	return func(req *http.Request) {
 		if req.Header == nil {
 			req.Header = make(http.Header)
@@ -75,7 +74,7 @@ func WithBearer(token string) Option {
 }
 
 // WithSetHeader sets the header key to value val.
-func WithSetHeader(key, val string) Option {
+func WithSetHeader(key, val string) RequestOption {
 	return func(req *http.Request) {
 		if req.Header == nil {
 			req.Header = make(http.Header)
@@ -85,7 +84,7 @@ func WithSetHeader(key, val string) Option {
 }
 
 // WithAddHeader adds the val to key header.
-func WithAddHeader(key, val string) Option {
+func WithAddHeader(key, val string) RequestOption {
 	return func(req *http.Request) {
 		if req.Header == nil {
 			req.Header = make(http.Header)

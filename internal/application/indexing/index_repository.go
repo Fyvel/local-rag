@@ -7,15 +7,11 @@ import (
 
 	"github.com/tmc/langchaingo/textsplitter"
 
-	"local-ai/internal/client"
 	"local-ai/internal/domain/documents"
 	"local-ai/internal/domain/repositories"
-	"local-ai/internal/embeddings"
-	"local-ai/internal/embeddings/ollama"
-	"local-ai/internal/fetcher"
-	"local-ai/internal/indexer"
-	"local-ai/internal/infra/store/chroma"
-	"local-ai/internal/store"
+	"local-ai/internal/infra/embeddings"
+	"local-ai/internal/infra/embeddings/ollama"
+	"local-ai/internal/infra/fetcher"
 )
 
 // IndexRepositoryCommand contains the parameters for indexing a repository.
@@ -39,7 +35,7 @@ type IndexRepositoryUseCase struct {
 	documentRepo      documents.DocumentRepository
 	embedder          embeddings.Embedder[*ollama.EmbeddingRequest]
 	textSplitter      *textsplitter.MarkdownTextSplitter
-	config            indexer.IndexerConfig
+	config            Config
 }
 
 // RepositoryFetcher defines the contract for fetching repositories.
@@ -48,37 +44,19 @@ type RepositoryFetcher interface {
 	GetGithubRepository(ctx context.Context, githubURL string, fileTypes []string) (*repositories.Repository, error)
 }
 
-// NewIndexRepositoryUseCase creates a new use case with default dependencies.
-// In a production application, these dependencies would be injected via DI container.
+// NewIndexRepositoryUseCase creates a new use case with injected dependencies.
 func NewIndexRepositoryUseCase(
-	targetIndex string,
-	chromaURL string,
-	ollamaURL string,
+	documentRepo documents.DocumentRepository,
+	embedder embeddings.Embedder[*ollama.EmbeddingRequest],
+	textSplitter *textsplitter.MarkdownTextSplitter,
+	config Config,
 ) *IndexRepositoryUseCase {
-	// Initialize text splitter
-	textSplitter := textsplitter.NewMarkdownTextSplitter([]textsplitter.Option{
-		// Can be configured with options
-	}...)
-
-	// Initialize vector store
-	vectorStore := store.NewVectorStore(
-		chroma.WithChromaURL(chromaURL),
-		chroma.WithHTTPClient(client.NewHTTP()),
-		chroma.WithCollection(targetIndex),
-	)
-
-	// Initialize embedder
-	embedder := ollama.NewEmbedder(
-		ollama.WithBaseURL(ollamaURL),
-		ollama.WithHTTPClient(client.NewHTTP()),
-	)
-
 	return &IndexRepositoryUseCase{
 		repositoryFetcher: &gitHubFetcher{},
-		documentRepo:      vectorStore,
+		documentRepo:      documentRepo,
 		embedder:          embedder,
 		textSplitter:      textSplitter,
-		config:            indexer.DefaultConfig(),
+		config:            config,
 	}
 }
 
@@ -105,7 +83,7 @@ func (uc *IndexRepositoryUseCase) Execute(ctx context.Context, cmd IndexReposito
 	fmt.Printf("Repository SHA: %s\n", repo.SHA)
 	fmt.Printf("Files found: %d\n", repo.FileCount())
 
-	idx := &indexer.Indexer{
+	idx := &Indexer{
 		TextSplitter:    uc.textSplitter,
 		VectorStore:     uc.documentRepo,
 		Embedding:       uc.embedder,

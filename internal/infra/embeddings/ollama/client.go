@@ -1,8 +1,8 @@
 package ollama
 
 import (
-	"local-ai/internal/client"
-	"local-ai/internal/embeddings"
+	"local-ai/internal/infra/embeddings"
+	"local-ai/internal/infra/httpclient"
 )
 
 const (
@@ -15,7 +15,7 @@ type Client struct {
 
 type Options struct {
 	BaseURL    string
-	HTTPClient *client.HTTP
+	HTTPClient *httpclient.Client
 }
 
 type Option func(*Options)
@@ -23,7 +23,7 @@ type Option func(*Options)
 func NewClient(opts ...Option) *Client {
 	options := Options{
 		BaseURL:    BaseURL,
-		HTTPClient: client.NewHTTP(),
+		HTTPClient: httpclient.New(),
 	}
 
 	for _, apply := range opts {
@@ -45,7 +45,7 @@ func WithBaseURL(baseURL string) Option {
 	}
 }
 
-func WithHTTPClient(httpClient *client.HTTP) Option {
+func WithHTTPClient(httpClient *httpclient.Client) Option {
 	return func(o *Options) {
 		o.HTTPClient = httpClient
 	}

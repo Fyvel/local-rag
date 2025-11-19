@@ -1,4 +1,4 @@
-package indexer
+package indexing
 
 import (
 	"context"
@@ -9,17 +9,13 @@ import (
 
 	"github.com/tmc/langchaingo/textsplitter"
 
-	"local-ai/internal/client"
 	"local-ai/internal/domain/documents"
 	"local-ai/internal/domain/repositories"
-	"local-ai/internal/embeddings"
-	"local-ai/internal/embeddings/ollama"
-	"local-ai/internal/fetcher"
-	"local-ai/internal/infra/store/chroma"
-	"local-ai/internal/store"
+	"local-ai/internal/infra/embeddings"
+	"local-ai/internal/infra/embeddings/ollama"
 )
 
-type IndexerConfig struct {
+type Config struct {
 	WorkerCount      int
 	ChunkMaxSize     int
 	ChunkOverlap     int
@@ -27,8 +23,8 @@ type IndexerConfig struct {
 }
 
 // DefaultConfig provides sensible defaults
-func DefaultConfig() IndexerConfig {
-	return IndexerConfig{
+func DefaultConfig() Config {
+	return Config{
 		WorkerCount:      runtime.NumCPU() / 2,
 		ChunkMaxSize:     1000,
 		ChunkOverlap:     100,
@@ -41,58 +37,7 @@ type Indexer struct {
 	VectorStore     documents.DocumentRepository
 	Embedding       embeddings.Embedder[*ollama.EmbeddingRequest]
 	DocumentService *documents.DocumentService
-	Config          IndexerConfig
-}
-
-func IndexGithubRepository(
-	ctx context.Context,
-	githubURL string,
-	fileTypes []string,
-	targetIndex string,
-) (*repositories.Repository, error) {
-	config := DefaultConfig()
-
-	ctx, cancel := context.WithTimeout(ctx, config.OperationTimeout)
-	defer cancel()
-
-	// Fetch GitHub repository
-	repo, err := fetcher.GetGithubRepository(ctx, githubURL, fileTypes)
-	if err != nil {
-		return repo, fmt.Errorf("failed to fetch repository: %w", err)
-	}
-
-	fmt.Printf("Repository SHA: %s\n", repo.SHA)
-	fmt.Printf("Files found: %d\n", len(repo.Files))
-
-	fmt.Printf("	>	Init text splitter...\n")
-	splitter := textsplitter.NewMarkdownTextSplitter([]textsplitter.Option{
-		// textsplitter.WithMaxCharacters(cfg.ChunkMaxSize),
-		// textsplitter.WithOverlap(cfg.ChunkOverlap),
-	}...)
-
-	fmt.Print("	>	Init vector store...\n")
-	vs := store.NewVectorStore(
-		chroma.WithChromaURL("http://localhost:8000"),
-		chroma.WithHTTPClient(client.NewHTTP()),
-		chroma.WithCollection(targetIndex),
-	)
-
-	fmt.Print("	>	Init embedding...\n")
-	embedding := ollama.NewEmbedder(
-		ollama.WithBaseURL("http://localhost:11434/api"),
-		ollama.WithHTTPClient(client.NewHTTP()),
-	)
-
-	indexer := &Indexer{
-		TextSplitter:    splitter,
-		VectorStore:     vs,
-		Embedding:       embedding,
-		DocumentService: documents.NewDocumentService(),
-		Config:          config,
-		// Logger:       logger,
-	}
-
-	return indexer.ProcessRepository(ctx, repo)
+	Config          Config
 }
 
 func (indexer *Indexer) ProcessRepository(ctx context.Context, repository *repositories.Repository) (*repositories.Repository, error) {

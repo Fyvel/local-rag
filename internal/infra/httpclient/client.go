@@ -1,11 +1,12 @@
-package client
+package httpclient
 
 import (
 	"context"
 	"net/http"
 )
 
-type HTTP struct {
+// Client wraps an HTTP client with optional rate limiting.
+type Client struct {
 	client  *http.Client
 	limiter Limiter
 }
@@ -21,7 +22,7 @@ type Limiter interface {
 	Wait(context.Context) error
 }
 
-func NewHTTP(opts ...Option) *HTTP {
+func New(opts ...Option) *Client {
 	options := Options{
 		HTTPClient: &http.Client{},
 	}
@@ -29,13 +30,13 @@ func NewHTTP(opts ...Option) *HTTP {
 		apply(&options)
 	}
 
-	return &HTTP{
+	return &Client{
 		client:  options.HTTPClient,
 		limiter: options.Limiter,
 	}
 }
 
-func (h *HTTP) Do(req *http.Request) (*http.Response, error) {
+func (h *Client) Do(req *http.Request) (*http.Response, error) {
 	if h.limiter != nil {
 		err := h.limiter.Wait(req.Context())
 		if err != nil {

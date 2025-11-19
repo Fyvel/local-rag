@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"local-ai/internal/application/indexing"
+	"local-ai/internal/di"
 )
 
 type IndexGithubRepoRequest struct {
@@ -55,12 +56,12 @@ func IndexGithubHandler(c *gin.Context) {
 		return
 	}
 
+	// TODO: Inject container via dependency injection instead of creating here
+	// For now, create container with default config
+	container := createContainer(req.TargetIndex)
+
 	// Create use case with dependencies
-	useCase := indexing.NewIndexRepositoryUseCase(
-		req.TargetIndex,
-		"http://localhost:8000",      // ChromaDB URL
-		"http://localhost:11434/api", // Ollama URL
-	)
+	useCase := container.NewIndexRepositoryUseCase()
 
 	// Execute use case
 	cmd := indexing.IndexRepositoryCommand{
@@ -95,4 +96,13 @@ func validateGithubURL(url string) bool {
 		return false
 	}
 	return true
+}
+
+func createContainer(targetIndex string) *di.Container {
+	cfg := di.Config{
+		ChromaURL:   "http://localhost:8000",
+		OllamaURL:   "http://localhost:11434/api",
+		TargetIndex: targetIndex,
+	}
+	return di.NewContainer(cfg)
 }

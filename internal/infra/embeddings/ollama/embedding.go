@@ -8,7 +8,7 @@ import (
 	"net/url"
 
 	"local-ai/internal/domain/embeddings"
-	"local-ai/internal/embeddings/request"
+	"local-ai/internal/infra/httpclient"
 )
 
 // EmbeddingRequest is serialized and sent to the API server.
@@ -46,13 +46,13 @@ func (c *Client) Embed(ctx context.Context, embReq *EmbeddingRequest) ([]*embedd
 		return nil, err
 	}
 
-	options := []request.Option{}
-	req, err := request.NewHTTP(ctx, http.MethodPost, u.String(), body, options...)
+	options := []httpclient.RequestOption{}
+	req, err := httpclient.NewRequest(ctx, http.MethodPost, u.String(), body, options...)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := request.Do[APIError](c.opts.HTTPClient, req)
+	resp, err := httpclient.Do[APIError](c.opts.HTTPClient, req)
 	if err != nil {
 		return nil, err
 	}
