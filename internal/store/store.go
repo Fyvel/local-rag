@@ -2,25 +2,15 @@ package store
 
 import (
 	"context"
-	"crypto/rand"
-	"crypto/sha256"
 	"fmt"
-	"time"
 
+	"local-ai/internal/domain/documents"
 	"local-ai/internal/store/chroma"
 )
 
 type VectorStore struct {
 	client       *chroma.Client
 	collectionID string
-}
-
-type Document struct {
-	ID         string
-	Content    string
-	SHA        string
-	Embeddings []float64
-	Metadata   map[string]interface{}
 }
 
 func NewVectorStore(opts ...chroma.Option) *VectorStore {
@@ -38,7 +28,7 @@ func NewVectorStore(opts ...chroma.Option) *VectorStore {
 	}
 }
 
-func (vs *VectorStore) AddDocument(ctx context.Context, doc Document) (bool, error) {
+func (vs *VectorStore) AddDocument(ctx context.Context, doc *documents.Document) (bool, error) {
 	req := &chroma.AddDocumentsRequest{
 		IDs:        []string{doc.ID},
 		Embeddings: [][]float64{doc.Embeddings},
@@ -78,25 +68,4 @@ type RepositoryRecord struct {
 	Url       string
 	SHA       string
 	UpdatedAt string
-}
-
-func GenerateID() string {
-	// Create buffer for 16 random bytes (similar to UUID)
-	b := make([]byte, 16)
-
-	// Read random bytes from crypto/rand
-	_, err := rand.Read(b)
-	if err != nil {
-		// Fallback to timestamp-based ID if random generation fails
-		return fmt.Sprintf("id-%d", time.Now().UnixNano())
-	}
-
-	// Format similar to UUID but without hyphens
-	return fmt.Sprintf("%x", b)
-}
-
-func GenerateDeterministicID(input string) string {
-	// Create a hash of the input string
-	hash := fmt.Sprintf("%x", input)
-	return fmt.Sprintf("%x", sha256.Sum256([]byte(hash)))
 }

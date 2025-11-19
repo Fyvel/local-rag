@@ -10,6 +10,7 @@ import (
 	"github.com/tmc/langchaingo/textsplitter"
 
 	"local-ai/internal/client"
+	"local-ai/internal/domain/documents"
 	"local-ai/internal/embeddings"
 	"local-ai/internal/embeddings/ollama"
 	"local-ai/internal/fetcher"
@@ -185,8 +186,8 @@ func (indexer *Indexer) processFile(ctx context.Context, repository fetcher.Gith
 
 			docIdStr := fmt.Sprintf("%s:%s:%s:%d", repository.Name, repository.SHA, file.Path, chunkIndex)
 
-			doc := store.Document{
-				ID:         store.GenerateDeterministicID(docIdStr),
+			doc := &documents.Document{
+				ID:         documents.GenerateDeterministicID(docIdStr),
 				Content:    chunk,
 				Embeddings: embedding[0].Vector,
 				Metadata: map[string]any{
