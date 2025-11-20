@@ -122,7 +122,28 @@ func (indexer *Indexer) processFile(ctx context.Context, repository *repositorie
 	}
 
 	for chunkIndex, chunk := range chunks {
-		// Generate embedding for the chunk
+		// Generate deterministic document ID early to check if it already exists
+		// This avoids unnecessary embedding API calls for documents that haven't changed
+		docIDStr := fmt.Sprintf("%s:%s:%s:%d",
+			repository.Name,
+			repository.SHA,
+			file.Path,
+			chunkIndex,
+		)
+		docID := documents.GenerateDeterministicID(docIDStr)
+
+		// Check if document already exists
+		exists, err := indexer.VectorStore.DocumentExists(ctx, docID)
+		if err != nil {
+			return fmt.Errorf("failed to check document existence for file %s, chunk %d: %w", file.Name, chunkIndex, err)
+		}
+
+		if exists {
+			fmt.Printf("Skipping existing document: %s (chunk %d/%d)\n", file.Name, chunkIndex+1, len(chunks))
+			continue
+		}
+
+		// Generate embedding for the chunk (only if document doesn't exist)
 		embedding, err := indexer.Embedding.Embed(ctx, chunk, indexer.Config.EmbeddingModel)
 		if err != nil {
 			return fmt.Errorf("embedding failed for file %s, chunk %d: %w", file.Name, chunkIndex, err)
@@ -159,6 +180,8 @@ func (indexer *Indexer) processFile(ctx context.Context, repository *repositorie
 		if _, err := indexer.VectorStore.AddDocument(ctx, doc); err != nil {
 			return fmt.Errorf("failed to add document to vector store: %w", err)
 		}
+
+		fmt.Printf("Indexed new document: %s (chunk %d/%d)\n", file.Name, chunkIndex+1, len(chunks))
 	}
 
 	return nil

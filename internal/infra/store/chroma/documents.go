@@ -177,3 +177,75 @@ func (c *Client) Query(ctx context.Context, collectionID string, embedding []flo
 
 	return results, nil
 }
+
+type GetDocumentsRequest struct {
+	IDs     []string `json:"ids"`
+	Include []string `json:"include,omitempty"`
+}
+
+type GetDocumentsResponse struct {
+	IDs        []string         `json:"ids"`
+	Documents  []string         `json:"documents,omitempty"`
+	Metadatas  []map[string]any `json:"metadatas,omitempty"`
+	Embeddings [][]float64      `json:"embeddings,omitempty"`
+	Include    []string         `json:"include"`
+}
+
+func (c *Client) GetDocuments(ctx context.Context, collectionID string, ids []string) ([]QueryResult, error) {
+	url := fmt.Sprintf("%s/api/v2/tenants/%s/databases/%s/collections/%s/get",
+		c.baseURL, c.tenant, c.database, collectionID)
+
+	req := GetDocumentsRequest{
+		IDs:     ids,
+		Include: []string{"documents", "metadatas"},
+	}
+
+	body, err := json.Marshal(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(body))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	httpReq.Header.Set("Content-Type", "application/json")
+	if c.token != "" {
+		httpReq.Header.Set("x-chroma-token", c.token)
+	}
+
+	res, err := c.httpClient.Do(httpReq)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get documents: %w", err)
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to get documents, status: %d", res.StatusCode)
+	}
+
+	var getRes GetDocumentsResponse
+	if err := json.NewDecoder(res.Body).Decode(&getRes); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	var results []QueryResult
+	for i, id := range getRes.IDs {
+		result := QueryResult{
+			ID: id,
+		}
+
+		if len(getRes.Documents) > i {
+			result.Document = getRes.Documents[i]
+		}
+
+		if len(getRes.Metadatas) > i {
+			result.Metadata = getRes.Metadatas[i]
+		}
+
+		results = append(results, result)
+	}
+
+	return results, nil
+}

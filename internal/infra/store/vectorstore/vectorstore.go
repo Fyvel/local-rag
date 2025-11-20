@@ -83,3 +83,12 @@ func (vs *VectorStore) Query(ctx context.Context, embedding []float64, limit int
 		Results: domainResults,
 	}, nil
 }
+
+func (vs *VectorStore) DocumentExists(ctx context.Context, docID string) (bool, error) {
+	results, err := vs.client.GetDocuments(ctx, vs.collectionID, []string{docID})
+	if err != nil {
+		return false, fmt.Errorf("failed to check document existence: %w", err)
+	}
+
+	return len(results) > 0, nil
+}

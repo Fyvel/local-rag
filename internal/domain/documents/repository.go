@@ -19,4 +19,6 @@ type DocumentRepository interface {
 	RemoveDocument(ctx context.Context, docID string) (bool, error)
 
 	Query(ctx context.Context, embedding []float64, limit int) (*QueryResponse, error)
+
+	DocumentExists(ctx context.Context, docID string) (bool, error)
 }
