@@ -62,6 +62,24 @@ func (vs *VectorStore) RemoveDocument(ctx context.Context, docID string) (bool, 
 	return true, nil
 }
 
-func (vs *VectorStore) Query(ctx context.Context, embedding []float64, limit int) (interface{}, error) {
-	return vs.client.Query(ctx, vs.collectionID, embedding, limit)
+func (vs *VectorStore) Query(ctx context.Context, embedding []float64, limit int) (*documents.QueryResponse, error) {
+	results, err := vs.client.Query(ctx, vs.collectionID, embedding, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert Chroma results to domain QueryResults
+	domainResults := make([]documents.QueryResult, len(results))
+	for i, result := range results {
+		domainResults[i] = documents.QueryResult{
+			ID:       result.ID,
+			Distance: result.Distance,
+			Document: result.Document,
+			Metadata: result.Metadata,
+		}
+	}
+
+	return &documents.QueryResponse{
+		Results: domainResults,
+	}, nil
 }

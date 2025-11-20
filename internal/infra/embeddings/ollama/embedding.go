@@ -32,8 +32,14 @@ func (e *EmbeddingResponse) ToEmbeddings() ([]*embeddings.Embedding, error) {
 	}, nil
 }
 
-// Embed returns embeddings for every object in EmbeddingRequest.
-func (c *Client) Embed(ctx context.Context, embReq *EmbeddingRequest) ([]*embeddings.Embedding, error) {
+// Embed implements the domain embeddings.Embedder interface.
+// It generates embeddings for the given text using the specified model.
+func (c *Client) Embed(ctx context.Context, text string, model string) ([]*embeddings.Embedding, error) {
+	embReq := &EmbeddingRequest{
+		Prompt: text,
+		Model:  model,
+	}
+
 	u, err := url.Parse(c.opts.BaseURL + "/embeddings")
 	if err != nil {
 		return nil, err

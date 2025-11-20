@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/v1/health": {
+        "/health": {
             "get": {
                 "description": "Returns the health status of the API service",
                 "consumes": [
@@ -34,11 +34,17 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/api.SuccessResponse-api_HealthCheckResponse"
                         }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
                     }
                 }
             }
         },
-        "/api/v1/index-github": {
+        "/index-github": {
             "post": {
                 "description": "Fetches and indexes the contents of a GitHub repository",
                 "consumes": [
@@ -136,7 +142,7 @@ const docTemplate = `{
                     "type": "string",
                     "example": "https://github.com/username/repo"
                 },
-                "index_source": {
+                "target_index": {
                     "type": "string",
                     "example": "target_index"
                 }
@@ -180,12 +186,12 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "",
-	BasePath:         "",
+	Version:          "1.0",
+	Host:             "localhost:8080",
+	BasePath:         "/api/v1",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "Local RAG API",
+	Description:      "API for local RAG indexing and document management",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

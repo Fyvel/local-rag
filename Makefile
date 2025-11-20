@@ -4,14 +4,14 @@
 
 # Generate Swagger documentation
 docs:
-	$(HOME)/go/bin/swag init -g cmd/server/main.go -o docs
+	@$(HOME)/go/bin/swag init -g internal/api/router.go -o docs
 	@echo "Swagger documentation updated"
 
 build: docs
-	go build -o bin/server ./cmd/server
+	go build -o bin/server ./server
 
 run: docs
-	go run ./cmd/server
+	go run ./server
 
 test:
 	go test ./...

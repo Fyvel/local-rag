@@ -71,7 +71,7 @@ func (c *Client) GetCollection(ctx context.Context, name string) (*Collection, e
 	}
 	var collection Collection
 	if err := json.NewDecoder(res.Body).Decode(&collection); err != nil {
-		return nil, fmt.Errorf("failed to decode resonse: %w", err)
+		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 
 	return &collection, nil
@@ -113,7 +113,7 @@ func (c *Client) CreateCollection(ctx context.Context, name string) (*Collection
 
 	var collection Collection
 	if err := json.NewDecoder(res.Body).Decode(&collection); err != nil {
-		return nil, fmt.Errorf("failed to decode resonse: %w", err)
+		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 
 	return &collection, nil

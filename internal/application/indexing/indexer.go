@@ -7,12 +7,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/tmc/langchaingo/textsplitter"
-
 	"local-ai/internal/domain/documents"
+	"local-ai/internal/domain/embeddings"
 	"local-ai/internal/domain/repositories"
-	"local-ai/internal/infra/embeddings"
-	"local-ai/internal/infra/embeddings/ollama"
+	"local-ai/internal/domain/transformers"
 )
 
 type Config struct {
@@ -20,6 +18,7 @@ type Config struct {
 	ChunkMaxSize     int
 	ChunkOverlap     int
 	OperationTimeout time.Duration
+	EmbeddingModel   string
 }
 
 // DefaultConfig provides sensible defaults
@@ -29,13 +28,14 @@ func DefaultConfig() Config {
 		ChunkMaxSize:     1000,
 		ChunkOverlap:     100,
 		OperationTimeout: 10 * time.Minute,
+		EmbeddingModel:   "mxbai-embed-large",
 	}
 }
 
 type Indexer struct {
-	TextSplitter    *textsplitter.MarkdownTextSplitter
+	TextSplitter    transformers.TextChunker
 	VectorStore     documents.DocumentRepository
-	Embedding       embeddings.Embedder[*ollama.EmbeddingRequest]
+	Embedding       embeddings.Embedder
 	DocumentService *documents.DocumentService
 	Config          Config
 }
@@ -124,10 +124,7 @@ func (indexer *Indexer) processFile(ctx context.Context, repository *repositorie
 
 		for chunkIndex, chunk := range chunks {
 			// Generate embedding for the chunk
-			embedding, err := indexer.Embedding.Embed(ctx, &ollama.EmbeddingRequest{
-				Prompt: chunk,
-				Model:  "mxbai-embed-large",
-			})
+			embedding, err := indexer.Embedding.Embed(ctx, chunk, indexer.Config.EmbeddingModel)
 			if err != nil {
 				return fmt.Errorf("embedding failed for file %s, chunk %d: %w", file.Name, chunkIndex, err)
 			}

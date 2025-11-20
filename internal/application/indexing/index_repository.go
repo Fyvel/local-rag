@@ -5,13 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/tmc/langchaingo/textsplitter"
-
 	"local-ai/internal/domain/documents"
+	"local-ai/internal/domain/embeddings"
 	"local-ai/internal/domain/repositories"
-	"local-ai/internal/infra/embeddings"
-	"local-ai/internal/infra/embeddings/ollama"
-	"local-ai/internal/infra/fetcher"
+	"local-ai/internal/domain/transformers"
 )
 
 // IndexRepositoryCommand contains the parameters for indexing a repository.
@@ -31,28 +28,24 @@ type IndexRepositoryResult struct {
 // IndexRepositoryUseCase orchestrates the process of fetching and indexing a GitHub repository.
 // This is an application service that coordinates between domain entities, repositories, and infrastructure.
 type IndexRepositoryUseCase struct {
-	repositoryFetcher RepositoryFetcher
+	repositoryFetcher repositories.Fetcher
 	documentRepo      documents.DocumentRepository
-	embedder          embeddings.Embedder[*ollama.EmbeddingRequest]
-	textSplitter      *textsplitter.MarkdownTextSplitter
+	embedder          embeddings.Embedder
+	textSplitter      transformers.TextChunker
 	config            Config
 }
 
-// RepositoryFetcher defines the contract for fetching repositories.
-// This allows the use case to be independent of the specific fetcher implementation.
-type RepositoryFetcher interface {
-	GetGithubRepository(ctx context.Context, githubURL string, fileTypes []string) (*repositories.Repository, error)
-}
-
 // NewIndexRepositoryUseCase creates a new use case with injected dependencies.
+// All dependencies are domain interfaces, making this truly infrastructure-agnostic.
 func NewIndexRepositoryUseCase(
+	repositoryFetcher repositories.Fetcher,
 	documentRepo documents.DocumentRepository,
-	embedder embeddings.Embedder[*ollama.EmbeddingRequest],
-	textSplitter *textsplitter.MarkdownTextSplitter,
+	embedder embeddings.Embedder,
+	textSplitter transformers.TextChunker,
 	config Config,
 ) *IndexRepositoryUseCase {
 	return &IndexRepositoryUseCase{
-		repositoryFetcher: &gitHubFetcher{},
+		repositoryFetcher: repositoryFetcher,
 		documentRepo:      documentRepo,
 		embedder:          embedder,
 		textSplitter:      textSplitter,
@@ -75,7 +68,7 @@ func (uc *IndexRepositoryUseCase) Execute(ctx context.Context, cmd IndexReposito
 	}
 
 	fmt.Printf("Fetching repository: %s\n", cmd.GithubURL)
-	repo, err := uc.repositoryFetcher.GetGithubRepository(ctx, cmd.GithubURL, cmd.FileTypes)
+	repo, err := uc.repositoryFetcher.FetchRepository(ctx, cmd.GithubURL, cmd.FileTypes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch repository: %w", err)
 	}
@@ -101,10 +94,4 @@ func (uc *IndexRepositoryUseCase) Execute(ctx context.Context, cmd IndexReposito
 		Repository: processedRepo,
 		IndexID:    cmd.TargetIndex,
 	}, nil
-}
-
-type gitHubFetcher struct{}
-
-func (f *gitHubFetcher) GetGithubRepository(ctx context.Context, githubURL string, fileTypes []string) (*repositories.Repository, error) {
-	return fetcher.GetGithubRepository(ctx, githubURL, fileTypes)
 }

@@ -13,9 +13,22 @@ import (
 	"local-ai/internal/domain/repositories"
 )
 
-// GetGithubRepository fetches a GitHub repository and returns it as a domain Repository.
-// This is an infrastructure adapter that uses git operations to populate domain entities.
-func GetGithubRepository(ctx context.Context, githubURL string, fileTypes []string) (*repositories.Repository, error) {
+// GitHubFetcher is an infrastructure implementation of repositories.Fetcher
+// that retrieves repositories from GitHub using git operations.
+type GitHubFetcher struct{}
+
+// NewGitHubFetcher creates a new GitHub fetcher.
+func NewGitHubFetcher() repositories.Fetcher {
+	return &GitHubFetcher{}
+}
+
+// FetchRepository implements the repositories.Fetcher interface for GitHub.
+func (f *GitHubFetcher) FetchRepository(ctx context.Context, githubURL string, fileTypes []string) (*repositories.Repository, error) {
+	return fetchGithubRepository(ctx, githubURL, fileTypes)
+}
+
+// fetchGithubRepository is the internal implementation that fetches a GitHub repository.
+func fetchGithubRepository(ctx context.Context, githubURL string, fileTypes []string) (*repositories.Repository, error) {
 
 	var repoDir string
 	var repo *git.Repository

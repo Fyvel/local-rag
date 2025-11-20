@@ -1,7 +1,7 @@
 package ollama
 
 import (
-	"local-ai/internal/infra/embeddings"
+	"local-ai/internal/domain/embeddings"
 	"local-ai/internal/infra/httpclient"
 )
 
@@ -35,7 +35,8 @@ func NewClient(opts ...Option) *Client {
 	}
 }
 
-func NewEmbedder(opts ...Option) embeddings.Embedder[*EmbeddingRequest] {
+// NewEmbedder creates a new Ollama embedder that implements the domain Embedder interface.
+func NewEmbedder(opts ...Option) embeddings.Embedder {
 	return NewClient(opts...)
 }
 

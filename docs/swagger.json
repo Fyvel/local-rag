@@ -1,10 +1,15 @@
 {
     "swagger": "2.0",
     "info": {
-        "contact": {}
+        "description": "API for local RAG indexing and document management",
+        "title": "Local RAG API",
+        "contact": {},
+        "version": "1.0"
     },
+    "host": "localhost:8080",
+    "basePath": "/api/v1",
     "paths": {
-        "/api/v1/health": {
+        "/health": {
             "get": {
                 "description": "Returns the health status of the API service",
                 "consumes": [
@@ -23,11 +28,17 @@
                         "schema": {
                             "$ref": "#/definitions/api.SuccessResponse-api_HealthCheckResponse"
                         }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
                     }
                 }
             }
         },
-        "/api/v1/index-github": {
+        "/index-github": {
             "post": {
                 "description": "Fetches and indexes the contents of a GitHub repository",
                 "consumes": [
@@ -125,7 +136,7 @@
                     "type": "string",
                     "example": "https://github.com/username/repo"
                 },
-                "index_source": {
+                "target_index": {
                     "type": "string",
                     "example": "target_index"
                 }

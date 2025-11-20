@@ -1,3 +1,4 @@
+basePath: /api/v1
 definitions:
   api.ErrorResponse:
     properties:
@@ -32,7 +33,7 @@ definitions:
       github_url:
         example: https://github.com/username/repo
         type: string
-      index_source:
+      target_index:
         example: target_index
         type: string
     required:
@@ -60,10 +61,14 @@ definitions:
         example: true
         type: boolean
     type: object
+host: localhost:8080
 info:
   contact: {}
+  description: API for local RAG indexing and document management
+  title: Local RAG API
+  version: "1.0"
 paths:
-  /api/v1/health:
+  /health:
     get:
       consumes:
       - application/json
@@ -75,10 +80,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/api.SuccessResponse-api_HealthCheckResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
       summary: Health check endpoint
       tags:
       - health
-  /api/v1/index-github:
+  /index-github:
     post:
       consumes:
       - application/json
