@@ -80,7 +80,7 @@ func (uc *IndexRepositoryUseCase) Execute(ctx context.Context, cmd IndexReposito
 		TextSplitter:    uc.textSplitter,
 		VectorStore:     uc.documentRepo,
 		Embedding:       uc.embedder,
-		DocumentService: documents.NewDocumentService(),
+		DocumentService: &documents.DocumentService{},
 		Config:          uc.config,
 	}
 

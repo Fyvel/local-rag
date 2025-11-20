@@ -24,12 +24,6 @@ func NewGitHubFetcher() repositories.Fetcher {
 
 // FetchRepository implements the repositories.Fetcher interface for GitHub.
 func (f *GitHubFetcher) FetchRepository(ctx context.Context, githubURL string, fileTypes []string) (*repositories.Repository, error) {
-	return fetchGithubRepository(ctx, githubURL, fileTypes)
-}
-
-// fetchGithubRepository is the internal implementation that fetches a GitHub repository.
-func fetchGithubRepository(ctx context.Context, githubURL string, fileTypes []string) (*repositories.Repository, error) {
-
 	var repoDir string
 	var repo *git.Repository
 	var err error

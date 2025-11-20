@@ -22,11 +22,6 @@ type ChunkMetadata struct {
 // This is a domain service that encapsulates business rules for document creation and management.
 type DocumentService struct{}
 
-// NewDocumentService creates a new DocumentService.
-func NewDocumentService() *DocumentService {
-	return &DocumentService{}
-}
-
 // CreateDocumentFromChunk creates a Document entity from a text chunk with its metadata.
 // This encapsulates the business logic of how documents are constructed from chunks,
 // including ID generation, metadata enrichment, and timestamping.

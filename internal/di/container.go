@@ -30,7 +30,6 @@ type Container struct {
 	Embedder          embeddings.Embedder
 	RepositoryFetcher repositories.Fetcher
 	TextSplitter      transformers.TextChunker
-	DocumentService   *documents.DocumentService
 	IndexingConfig    indexing.Config
 }
 
@@ -50,16 +49,13 @@ func NewContainer(cfg Config) *Container {
 	)
 
 	// Initialize embedder
-	embedder := ollama.NewEmbedder(
+	embedder := ollama.NewClient(
 		ollama.WithBaseURL(cfg.OllamaURL),
 		ollama.WithHTTPClient(httpClient),
 	)
 
 	// Initialize repository fetcher
 	repositoryFetcher := fetcher.NewGitHubFetcher()
-
-	// Initialize domain services
-	documentService := documents.NewDocumentService()
 
 	// Initialize indexing config
 	indexingConfig := indexing.DefaultConfig()
@@ -70,7 +66,6 @@ func NewContainer(cfg Config) *Container {
 		Embedder:          embedder,
 		RepositoryFetcher: repositoryFetcher,
 		TextSplitter:      textSplitter,
-		DocumentService:   documentService,
 		IndexingConfig:    indexingConfig,
 	}
 }

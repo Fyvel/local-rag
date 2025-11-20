@@ -80,13 +80,12 @@ func validateGithubURL(url string) bool {
 	if url == "" {
 		return false
 	}
+
 	const githubPrefix = "https://github.com/"
-	if len(url) < len(githubPrefix) {
-		return false
-	}
 	if !strings.HasPrefix(url, githubPrefix) {
 		return false
 	}
+
 	// Check that there's content after the prefix (owner/repo)
 	remaining := strings.TrimPrefix(url, githubPrefix)
 	parts := strings.Split(remaining, "/")

@@ -20,7 +20,7 @@ type Options struct {
 
 type Option func(*Options)
 
-func NewClient(opts ...Option) *Client {
+func NewClient(opts ...Option) embeddings.Embedder {
 	options := Options{
 		BaseURL:    BaseURL,
 		HTTPClient: httpclient.New(),
@@ -33,11 +33,6 @@ func NewClient(opts ...Option) *Client {
 	return &Client{
 		opts: options,
 	}
-}
-
-// NewEmbedder creates a new Ollama embedder that implements the domain Embedder interface.
-func NewEmbedder(opts ...Option) embeddings.Embedder {
-	return NewClient(opts...)
 }
 
 func WithBaseURL(baseURL string) Option {

@@ -57,24 +57,23 @@ func (indexer *Indexer) ProcessRepository(ctx context.Context, repository *repos
 		go func() {
 			defer wg.Done()
 			for file := range filesChan {
-				// Check if context is done
-				select {
-				case <-ctx.Done():
+				// Check if context is done (early exit)
+				if ctx.Err() != nil {
 					mu.Lock()
 					if firstErr == nil {
 						firstErr = ctx.Err()
 					}
 					mu.Unlock()
 					return
-				default:
-					if err := indexer.processFile(ctx, repository, file); err != nil {
-						mu.Lock()
-						if firstErr == nil {
-							firstErr = err
-						}
-						errChan <- err
-						mu.Unlock()
+				}
+
+				if err := indexer.processFile(ctx, repository, file); err != nil {
+					mu.Lock()
+					if firstErr == nil {
+						firstErr = err
 					}
+					errChan <- err
+					mu.Unlock()
 				}
 			}
 		}()
@@ -110,58 +109,57 @@ func (indexer *Indexer) ProcessRepository(ctx context.Context, repository *repos
 // processFile handles indexing of an individual file
 func (indexer *Indexer) processFile(ctx context.Context, repository *repositories.Repository, file repositories.File) error {
 	// Context check
-	select {
-	case <-ctx.Done():
+	if ctx.Err() != nil {
 		return ctx.Err()
-	default:
-		fmt.Printf("Processing file: %s\n", file.Name)
-		fmt.Printf("File path: %s\n", file.Path)
-
-		chunks, err := indexer.TextSplitter.SplitText(file.Content)
-		if err != nil {
-			return fmt.Errorf("failed to split file %s: %w", file.Name, err)
-		}
-
-		for chunkIndex, chunk := range chunks {
-			// Generate embedding for the chunk
-			embedding, err := indexer.Embedding.Embed(ctx, chunk, indexer.Config.EmbeddingModel)
-			if err != nil {
-				return fmt.Errorf("embedding failed for file %s, chunk %d: %w", file.Name, chunkIndex, err)
-			}
-
-			// Use domain service to create document from chunk
-			metadata := documents.ChunkMetadata{
-				FileName:       file.Name,
-				FilePath:       file.Path,
-				FileType:       file.Type,
-				FileSize:       len(file.Content),
-				ChunkIndex:     chunkIndex,
-				TotalChunks:    len(chunks),
-				RepositoryURL:  repository.URL,
-				RepositoryName: repository.Name,
-				CommitSHA:      repository.SHA,
-			}
-
-			doc, err := indexer.DocumentService.CreateDocumentFromChunk(
-				chunk,
-				embedding[0].Vector,
-				metadata,
-			)
-			if err != nil {
-				return fmt.Errorf("failed to create document for file %s, chunk %d: %w", file.Name, chunkIndex, err)
-			}
-
-			// Validate document using domain service
-			if err := indexer.DocumentService.ValidateDocument(doc); err != nil {
-				return fmt.Errorf("document validation failed for file %s, chunk %d: %w", file.Name, chunkIndex, err)
-			}
-
-			// Store document
-			if _, err := indexer.VectorStore.AddDocument(ctx, doc); err != nil {
-				return fmt.Errorf("failed to add document to vector store: %w", err)
-			}
-		}
-
-		return nil
 	}
+
+	fmt.Printf("Processing file: %s\n", file.Name)
+	fmt.Printf("File path: %s\n", file.Path)
+
+	chunks, err := indexer.TextSplitter.SplitText(file.Content)
+	if err != nil {
+		return fmt.Errorf("failed to split file %s: %w", file.Name, err)
+	}
+
+	for chunkIndex, chunk := range chunks {
+		// Generate embedding for the chunk
+		embedding, err := indexer.Embedding.Embed(ctx, chunk, indexer.Config.EmbeddingModel)
+		if err != nil {
+			return fmt.Errorf("embedding failed for file %s, chunk %d: %w", file.Name, chunkIndex, err)
+		}
+
+		// Use domain service to create document from chunk
+		metadata := documents.ChunkMetadata{
+			FileName:       file.Name,
+			FilePath:       file.Path,
+			FileType:       file.Type,
+			FileSize:       len(file.Content),
+			ChunkIndex:     chunkIndex,
+			TotalChunks:    len(chunks),
+			RepositoryURL:  repository.URL,
+			RepositoryName: repository.Name,
+			CommitSHA:      repository.SHA,
+		}
+
+		doc, err := indexer.DocumentService.CreateDocumentFromChunk(
+			chunk,
+			embedding[0].Vector,
+			metadata,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to create document for file %s, chunk %d: %w", file.Name, chunkIndex, err)
+		}
+
+		// Validate document using domain service
+		if err := indexer.DocumentService.ValidateDocument(doc); err != nil {
+			return fmt.Errorf("document validation failed for file %s, chunk %d: %w", file.Name, chunkIndex, err)
+		}
+
+		// Store document
+		if _, err := indexer.VectorStore.AddDocument(ctx, doc); err != nil {
+			return fmt.Errorf("failed to add document to vector store: %w", err)
+		}
+	}
+
+	return nil
 }

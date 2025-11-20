@@ -22,13 +22,10 @@ type EmbeddingResponse struct {
 	Embedding []float64 `json:"embedding"`
 }
 
-// ToEmbeddings converts the API response,
-// into a slice of embeddings and returns it.
+// ToEmbeddings converts the API response into a slice of embeddings.
 func (e *EmbeddingResponse) ToEmbeddings() ([]*embeddings.Embedding, error) {
-	floats := make([]float64, len(e.Embedding))
-	copy(floats, e.Embedding)
 	return []*embeddings.Embedding{
-		{Vector: floats},
+		{Vector: e.Embedding},
 	}, nil
 }
 
