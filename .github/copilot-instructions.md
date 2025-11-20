@@ -1,105 +1,88 @@
-# Copilot Refactoring Instructions (Go + DDD Migration)
+# Copilot Architecture Review Instructions (Go + DDD Compliance)
 
 ## Goal
-Incrementally refactor the Go codebase into a clean Domain-Driven Design (DDD) architecture using the final folder structure:
+Review and validate the current architecture to ensure full compliance with the project's Domain-Driven Design (DDD) structure:
 
-- `api/` — HTTP, gRPC, CLI, or any delivery layer.
-- `application/` — use cases, orchestrators, DTOs, application services.
-- `domain/` — entities, value objects, aggregates, domain services, domain errors, repository interfaces.
-- `infra/` — concrete implementations: database adapters, external clients, messaging, logging.
-- `di/` — composition root: wiring dependencies (manual or with a DI tool).
+- `api/`  
+- `application/`  
+- `domain/`  
+- `infra/`  
+- `di/`
 
-The end state must:
-- Keep the project compiling at every step.
-- Preserve behavior unless intentionally modified.
-- Follow Go idioms: small packages, clear naming, minimal interfaces, explicit dependencies.
-- Fully relocate code to the structure above and remove obsolete folders.
+Identify misuse, misplaced dependencies, architectural leaks, or package violations, and propose corrective refactor steps.  
+Finally, ensure the root `README.md` accurately documents the resulting architecture and code layout.
 
-## Architectural Expectations
-**Domain**
-- Must be framework-agnostic.
-- Must not import `infra`, `api`, or `application`.
-- Define repository and service interfaces only when required by domain rules.
-- Model aggregates carefully; keep invariants inside domain constructors and methods.
+## Review Scope
 
-**Application**
-- Calls domain services and repositories.
-- Contains use cases, commands, queries, orchestrators.
-- Translates between API DTOs and domain objects.
+Copilot should actively examine:
+1. **Package structure**
+   - Files placed in the wrong layer.
+   - Packages not following Go naming standards.
+   - Missing or redundant subpackages.
 
-**Infra**
-- Concrete implementations for repositories, external services, and technical details.
-- Keep infra-specific errors wrapped and translated into domain/application errors at boundaries.
+2. **Imports and dependency flows**
+   - `domain` must not import `application`, `api`, `infra`, or `di`.
+   - `application` must not import `api` or `di`.
+   - `api` must not import `infra` directly (except when strictly necessary for low-level integration).
+   - `di` may import everything but must not contain business logic.
 
-**API**
-- Only delivery concerns: HTTP routing, JSON encoding/decoding, gRPC definitions, CLI commands.
-- No business logic.
+3. **Misplaced logic**
+   - Business rules in handlers → should be in `domain`.
+   - Orchestration logic in domain → should be in `application`.
+   - Infrastructure concerns in domain → move to `infra`.
 
-**DI**
-- Central initialization: constructing services, repositories, handlers, application use cases.
-- No domain logic here.
+4. **Circular dependencies**
+   - Identify cycles and propose breakage strategies (e.g., extracting interfaces, restructuring packages).
 
-## Refactoring Rules
-To propose or apply changes, Copilot should:
+5. **Inconsistent abstractions**
+   - Unnecessary interfaces.
+   - Repositories defined in `infra` instead of `domain`.
+   - Infra leaking concrete types into higher layers.
 
-1. **Work incrementally**
-   - One clear boundary improvement per iteration.
-   - Produce compiling, runnable code at each step.
-   - Avoid speculative abstractions.
+6. **Tech debt from migration**
+   - Stale helper functions.
+   - Duplicate models.
+   - Old folder remnants.
+   - Forgotten TODOs referencing previous architecture.
 
-2. **Prioritize structure clarity**
-   - Move code into `domain` first (entities, logic).
-   - Introduce `application` when orchestrations emerge.
-   - Create `infra` when relocating DB or external integrations.
-   - Move handlers/controllers into `api`.
-   - Centralize wiring into `di`.
+## Correction Rules
 
-3. **Finalization phase**
-   Copilot must:
-   - Identify any remaining files outside the target folders.
-   - Relocate them to the appropriate layer.
-   - Remove old or duplicate folders.
-   - Rename packages to follow Go conventions (lowercase, no plural unless meaningful, cohesive packages).
-   - Update imports across the project.
-   - Ensure no circular dependencies remain.
-   - Clean up any leftover transitional code or adapters.
+Copilot must propose iterative fixes that:
+- Are small and self-contained.
+- Compile successfully.
+- Preserve behavior.
+- Improve structural correctness.
 
-4. **Go conventions**
-   - Keep package names concise and domain-oriented.
-   - Avoid overly deep package hierarchies.
-   - Avoid stuttered names (e.g., `order.OrderService` is preferred over `order.OrderDomainService`).
-   - Prefer small, explicit interfaces placed where they are consumed.
+Valid types of correction steps:
+- Moving structs, functions, or packages.
+- Introducing minimal refactor interfaces to break cycles.
+- Replacing infra types with domain abstractions.
+- Consolidating domain entities and value objects.
+- Standardizing naming (e.g., `order/`, not `ordersDomain/`).
 
-5. **Preserve behavior**
-   - Refactor structure, not semantics.
-   - Maintain handler signatures unless intentionally adjusting APIs.
-   - Keep tests running; update them as directories move.
+## README Update Requirements
 
-## Code Generation Expectations
-Generated or updated code must:
-- Be complete, not pseudocode.
-- Include minimal working implementations when required (no broken stubs).
-- Use clear constructors for services and aggregates.
-- Avoid unnecessary generics or abstractions.
-- Respect runtime efficiency and error clarity.
+After architectural cleanup:
+- Generate the updated `README.md`.
+- It must describe the final DDD structure in plain language.
+- It must include:
+  - Folder overview (`api`, `application`, `domain`, `infra`, `di`)
+  - High-level responsibilities for each layer
+  - Explanation of dependency flow
+  - Notes on Go package conventions used by the project
+  - Steps for running, testing, and extending the project (if detectable)
+- Rewrite sections that reflect old structure or concepts.
 
-## Step-by-Step Iteration Examples
-Examples of valid steps:
-- Extract an entity or value object into `domain/<context>`.
-- Move business logic from handlers/controllers to a domain service.
-- Introduce a repository interface in `domain`, then move DB code to `infra`.
-- Create an application use case and update the API handler to call it.
-- Introduce a `di` package and consolidate object construction.
-- Relocate leftover utility packages to their correct layers or remove them.
-- Normalize naming and imports after full folder relocation.
-
-Each step should end with compiling code and a suggested commit message.
+The README must not include obsolete or transitional information.
 
 ## Output Format
-Copilot responses must include:
-1. A short explanation of the change.
-2. Complete code blocks for modified or new files.
-3. Files that must be deleted or moved.
-4. A suggested commit message.
-5. Notes on trade-offs when relevant.
+
+For each Copilot suggestion:
+1. Short explanation of detected issue.
+2. Corrected file changes (with full updated content).
+3. Files moved or removed.
+4. Updated README contents (when applicable).
+5. Suggested commit message.
+6. Brief trade-off notes (if relevant).
+
 
