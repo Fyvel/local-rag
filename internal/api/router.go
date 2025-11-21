@@ -33,12 +33,12 @@ func NewRouter(cfg RouterConfig) *gin.Engine {
 		// Indexing endpoints
 		v1.POST("/index-github", IndexGithubHandlerFactory(indexRepoUseCase))
 
-		// Future discussion endpoints (commented out for now)
-		// v1.GET("/discussions", GetDiscussionsHandler)
-		// v1.POST("/discussions", CreateDiscussionHandler)
-		// v1.GET("/discussions/:id", GetDiscussionByIDHandler)
-		// v1.POST("/discussions/:id/question", CreateQuestionHandler)
-		// v1.GET("/discussions/:id/history", GetDiscussionHistoryHandler)
+		// Future discussion endpoints
+		// v1.GET("/discussions", DiscussionHandlerFactory(discussionsUseCase))
+		// v1.POST("/discussions", CreateDiscussionHandlerFactory(discussionsUseCase))
+		// v1.GET("/discussions/:id", GetDiscussionHandlerFactory(discussionsUseCase))
+		// v1.POST("/discussions/:id/question", QuestionHandlerFactory(discussionsUseCase))
+		// v1.GET("/discussions/:id/history", HistoryHandlerFactory(discussionsUseCase))
 	}
 
 	// Swagger documentation

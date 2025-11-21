@@ -1,80 +1,125 @@
-# Copilot Code Cleanup Instructions (Go)
+# Copilot Instructions — Implementing Discussion Routes (Go DDD)
 
 ## Goal
-Audit the Go codebase to identify and eliminate dead code, simplify redundant logic, enforce early-exit patterns, and rename modules or functions that do not follow Go conventions.  
-All cleanup must preserve behavior, maintain compilation, and avoid introducing unnecessary abstractions.
+Implement the upcoming "discussion" feature in the existing Go DDD architecture.  
+The feature includes routes for:
+- Listing discussions
+- Creating a discussion
+- Fetching a discussion by ID
+- Asking a question in a discussion
+- Retrieving discussion history
 
-## Scope of Cleanup
+The routes currently appear commented in `api/router.go`.  
+Copilot must implement them **end-to-end** across layers:
 
-### 1. Remove unused code
-Copilot should:
-- Detect functions, types, structs, interfaces, methods, and modules that are never referenced.
-- Remove unused constants or variables.
-- Remove obsolete packages left from previous refactors.
-- Confirm that removing an item will not break external interfaces or public APIs unless the user explicitly approves.
+- `api/` handlers (Gin)
+- `application/` use cases
+- `domain/` models, aggregates, factories, and repositories
+- `infra/` repository implementations
+- `di/` wiring (constructors + initialization)
 
-Constraints:
-- If the unused item might be part of a public API, flag it rather than removing it silently.
-- Perform removals incrementally, one commit per logical deletion.
+Every step must compile, be incremental, and preserve clean DDD boundaries.
 
-### 2. Simplify redundant functions
-Copilot should:
-- Find functions whose only behavior is to call another function directly without adding value.
-- Replace unnecessary wrappers with direct calls.
-- Delete trivial pass-through abstractions unless they provide interface boundaries or dependency inversion.
-- Collapse redundant helper functions into a single, clear implementation.
+## Architectural Expectations
 
-Trade-off rule:
-- If a simplified function served as a seam for testing or an abstraction boundary, propose simplification but explain the impact.
-
-### 3. Prefer early exits
-Copilot should:
-- Identify functions using deep indentation or nested `if` blocks.
-- Rewrite using early returns to improve readability and reduce cyclomatic complexity.
-- Keep early exits consistent with error-handling idioms:
-  - `if err != nil { return … }`
-- Ensure no semantic change.
-
-### 4. Rename modules and functions to match Go conventions
-Copilot should:
-- Rename items not following Go naming rules:
-  - Package names: all lowercase, no underscores, short, domain-specific.
-  - Function names: CamelCase, exported only when needed.
-  - No stutter (e.g., `user.UserService` → `user.Service`).
-- Update all import paths and references.
-- Ensure renames are incremental and compilable.
-
-Examples:
-- `helpers_util` → `util`
-- `Calculate_total_price` → `CalculateTotalPrice`
-- `ordersDomain` → `order`
-- `DoStuff` → rename to a meaningful action
-
-### 5. Preserve behavior and maintain build health
+### Domain layer (`domain/discussion`)
 Copilot must:
-- Keep the build green after every cleanup step.
-- Avoid breaking imports.
-- Remove or update tests when functions are removed or renamed.
-  
-If a change is risky, Copilot must:
-- Propose the change,
-- Explain the concern,
-- Wait for explicit approval if needed.
+- Introduce a `Discussion` aggregate (ID, title/topic, message list, timestamps).
+- Introduce a `Message` or `Entry` value object as needed.
+- Implement domain invariants such as:
+  - Cannot add empty messages.
+  - Cannot add messages to a closed discussion (if applicable).
+- Define repository interfaces (e.g., `DiscussionRepository`).
+- Keep domain models free of infrastructure or API concerns.
 
-## Output Format for Each Cleanup Step
-Each suggestion from Copilot must include:
+### Application layer (`application/discussion`)
+Copilot must:
+- Implement use cases for:
+  - `ListDiscussions`
+  - `CreateDiscussion`
+  - `GetDiscussion`
+  - `AskQuestion`
+  - `GetDiscussionHistory`
+- Inject domain repository interface(s).
+- Translate DTOs from/to domain objects.
+- Handle orchestration logic cleanly.
 
-1. **Short explanation**  
-   What was detected, why it is unused or redundant, or which naming guideline applies.
+### API layer (`api/`)
+Copilot must:
+- Introduce handler factories similar to existing patterns.
+- Decode requests into application DTOs.
+- Encode results into JSON responses.
+- Implement or improve the following endpoints:
 
-2. **Updated or new files (full code blocks)**  
-   Always provide fully rewritten file content for modifications.
+```
+GET /api/v1/discussions
+POST /api/v1/discussions
+GET /api/v1/discussions/:id
+POST /api/v1/discussions/:id/question
+GET /api/v1/discussions/:id/history
+```
 
-3. **List of deletions or renames**  
-   Include old path and new path for renamed items.
+- Ensure handlers never contain domain or infrastructure logic.
 
-4. **Suggested commit message**  
-   Clear, concise, referencing the specific cleanup.
+### Infra layer (`infra/discussion`)
+Copilot must:
+- Create concrete repository implementations.
+- Provide minimal working storage (in-memory first).
+- Allow later extension to database or AI vector store.
+- Keep JSON, DB, filesystem, or external service logic here.
 
-5. **Trade-off notes**  
-   Only if simplification or removal could affect extensibility, testing, or architectural boundaries.
+### DI layer (`di/`)
+Copilot must:
+- Add factories to build all discussion use cases.
+- Initialize domain repo via infra implementation.
+- Provide the instance to API factories.
+
+## Route Implementation Rules
+
+When implementing or adjusting the routes:
+- Ensure consistent naming (Go conventions).
+- Prefer early exits in handlers.
+- Validate path parameters and request bodies at handler level.
+- Use consistent response shapes:
+- `{ "data": … }` or `{ "error": … }`
+- Avoid leaking infra types or domain types directly to HTTP responses.
+
+Copilot may modify the commented endpoints if an improved naming pattern is clearer:
+- `AskQuestionHandler` → `CreateMessageHandler` (if better domain alignment)
+- `HistoryHandler` → `ListMessagesHandler` (if aligned to domain naming)
+
+## Iteration Requirements
+
+For each proposed change, Copilot must:
+1. Provide a short explanation describing the architectural reasoning.
+2. Show complete updated files or new files.
+3. List movements, renames, or deletions.
+4. Generate a suggested commit message.
+5. Provide brief trade-off notes when a design decision is not obvious.
+
+## Additional Guidance
+
+- Start with domain models before application or API code.
+- Prefer small commits per layer or per use case.
+- Avoid exposing complex domain internals in HTTP responses.
+- Keep error handling minimal and explicit.
+- Ensure `NewRouter` stays clean, delegating logic to factories.
+
+## Acceptable Enhancements
+Copilot is allowed to:
+- Add request/response DTOs.
+- Introduce pagination for list endpoints.
+- Introduce domain events (optional).
+- Suggest better naming for endpoints, handlers, and use cases.
+- Add lightweight middleware if needed (e.g., request validation).
+
+## Completion Criteria
+The feature is considered fully implemented when:
+- All discussion routes compile and function end-to-end.
+- Domain models reflect the discussion domain accurately.
+- Use cases encapsulate logic with no leakage.
+- Infrastructure has minimal working repository implementation.
+- DI container can construct all required services.
+- The router exposes all routes cleanly.
+- No layer violates DDD boundaries.
+
