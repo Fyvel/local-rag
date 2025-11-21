@@ -23,6 +23,12 @@ func NewRouter(cfg RouterConfig) *gin.Engine {
 
 	// Create use cases from container (dependency injection)
 	indexRepoUseCase := cfg.Container.NewIndexRepositoryUseCase()
+	listDiscussionsUseCase := cfg.Container.NewListDiscussionsUseCase()
+	createDiscussionUseCase := cfg.Container.NewCreateDiscussionUseCase()
+	getDiscussionUseCase := cfg.Container.NewGetDiscussionUseCase()
+	askQuestionUseCase := cfg.Container.NewAskQuestionUseCase()
+	getDiscussionHistoryUseCase := cfg.Container.NewGetDiscussionHistoryUseCase()
+	askQuestionQuickUseCase := cfg.Container.NewAskQuestionQuickUseCase()
 
 	// API v1 routes
 	v1 := r.Group("/api/v1")
@@ -33,12 +39,17 @@ func NewRouter(cfg RouterConfig) *gin.Engine {
 		// Indexing endpoints
 		v1.POST("/index-github", IndexGithubHandlerFactory(indexRepoUseCase))
 
-		// Future discussion endpoints
-		// v1.GET("/discussions", DiscussionHandlerFactory(discussionsUseCase))
-		// v1.POST("/discussions", CreateDiscussionHandlerFactory(discussionsUseCase))
-		// v1.GET("/discussions/:id", GetDiscussionHandlerFactory(discussionsUseCase))
-		// v1.POST("/discussions/:id/question", QuestionHandlerFactory(discussionsUseCase))
-		// v1.GET("/discussions/:id/history", HistoryHandlerFactory(discussionsUseCase))
+		// Quick question endpoints (auto-creates discussions)
+		v1.POST("/questions", AskQuestionQuickHandlerFactory(askQuestionQuickUseCase))
+		v1.POST("/questions/stream", AskQuestionQuickStreamHandlerFactory(askQuestionQuickUseCase))
+
+		// Discussion endpoints
+		v1.GET("/discussions", ListDiscussionsHandlerFactory(listDiscussionsUseCase))
+		v1.POST("/discussions", CreateDiscussionHandlerFactory(createDiscussionUseCase))
+		v1.GET("/discussions/:id", GetDiscussionHandlerFactory(getDiscussionUseCase))
+		v1.POST("/discussions/:id/question", AskQuestionHandlerFactory(askQuestionUseCase))
+		v1.POST("/discussions/:id/question/stream", AskQuestionStreamHandlerFactory(askQuestionUseCase))
+		v1.GET("/discussions/:id/history", GetDiscussionHistoryHandlerFactory(getDiscussionHistoryUseCase))
 	}
 
 	// Swagger documentation

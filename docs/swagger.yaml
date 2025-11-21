@@ -1,5 +1,21 @@
 basePath: /api/v1
 definitions:
+  api.AskQuestionRequest:
+    properties:
+      question:
+        example: What are vector embeddings?
+        type: string
+    required:
+    - question
+    type: object
+  api.CreateDiscussionRequest:
+    properties:
+      title:
+        example: How to use embeddings?
+        type: string
+    required:
+    - title
+    type: object
   api.ErrorResponse:
     properties:
       error:
@@ -45,6 +61,24 @@ definitions:
         example: target_index
         type: string
     type: object
+  api.ListDiscussionsResponse:
+    properties:
+      discussions:
+        items:
+          $ref: '#/definitions/discussion.DiscussionSummaryDTO'
+        type: array
+    type: object
+  api.QuickQuestionRequest:
+    properties:
+      discussion_id:
+        example: ""
+        type: string
+      question:
+        example: What are vector embeddings?
+        type: string
+    required:
+    - question
+    type: object
   api.SuccessResponse-api_HealthCheckResponse:
     properties:
       data:
@@ -61,6 +95,155 @@ definitions:
         example: true
         type: boolean
     type: object
+  api.SuccessResponse-api_ListDiscussionsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.ListDiscussionsResponse'
+      success:
+        example: true
+        type: boolean
+    type: object
+  api.SuccessResponse-discussion_AskQuestionQuickResult:
+    properties:
+      data:
+        $ref: '#/definitions/discussion.AskQuestionQuickResult'
+      success:
+        example: true
+        type: boolean
+    type: object
+  api.SuccessResponse-discussion_AskQuestionResult:
+    properties:
+      data:
+        $ref: '#/definitions/discussion.AskQuestionResult'
+      success:
+        example: true
+        type: boolean
+    type: object
+  api.SuccessResponse-discussion_CreateDiscussionResult:
+    properties:
+      data:
+        $ref: '#/definitions/discussion.CreateDiscussionResult'
+      success:
+        example: true
+        type: boolean
+    type: object
+  api.SuccessResponse-discussion_DiscussionDTO:
+    properties:
+      data:
+        $ref: '#/definitions/discussion.DiscussionDTO'
+      success:
+        example: true
+        type: boolean
+    type: object
+  api.SuccessResponse-discussion_GetDiscussionHistoryResult:
+    properties:
+      data:
+        $ref: '#/definitions/discussion.GetDiscussionHistoryResult'
+      success:
+        example: true
+        type: boolean
+    type: object
+  discussion.AskQuestionQuickResult:
+    properties:
+      answer:
+        type: string
+      answer_timestamp:
+        type: string
+      assistant_message_id:
+        type: string
+      discussion_id:
+        type: string
+      discussion_title:
+        type: string
+      is_new_discussion:
+        type: boolean
+      question:
+        type: string
+      question_timestamp:
+        type: string
+      user_message_id:
+        type: string
+    type: object
+  discussion.AskQuestionResult:
+    properties:
+      answer:
+        type: string
+      answer_timestamp:
+        type: string
+      assistant_message_id:
+        type: string
+      discussion_id:
+        type: string
+      question:
+        type: string
+      question_timestamp:
+        type: string
+      user_message_id:
+        type: string
+    type: object
+  discussion.CreateDiscussionResult:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      status:
+        type: string
+      title:
+        type: string
+    type: object
+  discussion.DiscussionDTO:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      messages:
+        items:
+          $ref: '#/definitions/discussion.MessageDTO'
+        type: array
+      status:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  discussion.DiscussionSummaryDTO:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      message_count:
+        type: integer
+      status:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  discussion.GetDiscussionHistoryResult:
+    properties:
+      discussion_id:
+        type: string
+      messages:
+        items:
+          $ref: '#/definitions/discussion.MessageDTO'
+        type: array
+    type: object
+  discussion.MessageDTO:
+    properties:
+      content:
+        type: string
+      id:
+        type: string
+      role:
+        type: string
+      timestamp:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact: {}
@@ -68,6 +251,191 @@ info:
   title: Local RAG API
   version: "1.0"
 paths:
+  /discussions:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a list of all discussions with their summaries
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.SuccessResponse-api_ListDiscussionsResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: List all discussions
+      tags:
+      - discussions
+    post:
+      consumes:
+      - application/json
+      description: Creates a new discussion with the specified title
+      parameters:
+      - description: Discussion creation parameters
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateDiscussionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.SuccessResponse-discussion_CreateDiscussionResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Create a new discussion
+      tags:
+      - discussions
+  /discussions/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a complete discussion including all messages
+      parameters:
+      - description: Discussion ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.SuccessResponse-discussion_DiscussionDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Get a discussion by ID
+      tags:
+      - discussions
+  /discussions/{id}/history:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all messages in a discussion
+      parameters:
+      - description: Discussion ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.SuccessResponse-discussion_GetDiscussionHistoryResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Get discussion message history
+      tags:
+      - discussions
+  /discussions/{id}/question:
+    post:
+      consumes:
+      - application/json
+      description: Adds a user question to a discussion
+      parameters:
+      - description: Discussion ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Question parameters
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.AskQuestionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.SuccessResponse-discussion_AskQuestionResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Ask a question in a discussion
+      tags:
+      - discussions
+  /discussions/{id}/question/stream:
+    post:
+      consumes:
+      - application/json
+      description: Adds a user question to a discussion and streams the AI response
+        using Server-Sent Events
+      parameters:
+      - description: Discussion ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Question parameters
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.AskQuestionRequest'
+      produces:
+      - text/event-stream
+      responses:
+        "200":
+          description: Streaming response
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Ask a question with streaming response
+      tags:
+      - discussions
   /health:
     get:
       consumes:
@@ -117,4 +485,66 @@ paths:
       summary: Index a GitHub repository
       tags:
       - indexing
+  /questions:
+    post:
+      consumes:
+      - application/json
+      description: Asks a question, creating a new discussion if discussion_id is
+        not provided. Uses mistral:latest to auto-generate discussion titles.
+      parameters:
+      - description: Question parameters
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.QuickQuestionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.SuccessResponse-discussion_AskQuestionQuickResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Ask a question (with auto-discussion creation)
+      tags:
+      - discussions
+  /questions/stream:
+    post:
+      consumes:
+      - application/json
+      description: Asks a question with streaming response, creating a new discussion
+        if discussion_id is not provided
+      parameters:
+      - description: Question parameters
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.QuickQuestionRequest'
+      produces:
+      - text/event-stream
+      responses:
+        "200":
+          description: Streaming response
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Ask a question with streaming (with auto-discussion creation)
+      tags:
+      - discussions
 swagger: "2.0"

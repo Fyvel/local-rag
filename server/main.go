@@ -13,8 +13,10 @@ func main() {
 	// Initialize dependency injection container with configuration
 	cfg := di.Config{
 		ChromaURL:   "http://localhost:8000",
-		OllamaURL:   "http://localhost:11434/api",
+		OllamaURL:   "http://localhost:11434",
 		TargetIndex: "default_index",
+		ChatModel:   "gpt-oss:20b",
+		TitleModel:  "mistral:latest",
 	}
 	container := di.NewContainer(cfg)
 
