@@ -216,6 +216,23 @@ func (uc *AskQuestionQuickUseCase) ExecuteStream(ctx context.Context, cmd AskQue
 	return stream, disc, assistantMessageID, isNew, nil
 }
 
-func (uc *AskQuestionQuickUseCase) SaveDiscussion(ctx context.Context, disc *discussion.Discussion) error {
-	return uc.repo.Save(ctx, disc)
+func (uc *AskQuestionQuickUseCase) SaveStreamedResponse(ctx context.Context, disc *discussion.Discussion, assistantMessageID, content string) error {
+	if content == "" {
+		return fmt.Errorf("cannot save empty response")
+	}
+
+	assistantMessage, err := discussion.NewMessage(assistantMessageID, discussion.RoleAssistant, content)
+	if err != nil {
+		return fmt.Errorf("failed to create assistant message: %w", err)
+	}
+
+	if err := disc.AddMessage(assistantMessage); err != nil {
+		return fmt.Errorf("failed to add assistant message: %w", err)
+	}
+
+	if err := uc.repo.Save(ctx, disc); err != nil {
+		return fmt.Errorf("failed to save discussion: %w", err)
+	}
+
+	return nil
 }

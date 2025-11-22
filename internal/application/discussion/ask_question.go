@@ -170,8 +170,23 @@ func (uc *AskQuestionUseCase) ExecuteStream(ctx context.Context, cmd AskQuestion
 	return stream, disc, assistantMessageID, nil
 }
 
-// SaveDiscussion persists a discussion to the repository.
-// This is a helper method for the streaming endpoint to save the final state.
-func (uc *AskQuestionUseCase) SaveDiscussion(ctx context.Context, disc *discussion.Discussion) error {
-	return uc.repo.Save(ctx, disc)
+func (uc *AskQuestionUseCase) SaveStreamedResponse(ctx context.Context, disc *discussion.Discussion, assistantMessageID, content string) error {
+	if content == "" {
+		return fmt.Errorf("cannot save empty response")
+	}
+
+	assistantMessage, err := discussion.NewMessage(assistantMessageID, discussion.RoleAssistant, content)
+	if err != nil {
+		return fmt.Errorf("failed to create assistant message: %w", err)
+	}
+
+	if err := disc.AddMessage(assistantMessage); err != nil {
+		return fmt.Errorf("failed to add assistant message: %w", err)
+	}
+
+	if err := uc.repo.Save(ctx, disc); err != nil {
+		return fmt.Errorf("failed to save discussion: %w", err)
+	}
+
+	return nil
 }

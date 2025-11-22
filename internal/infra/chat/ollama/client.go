@@ -264,7 +264,7 @@ func (c *ChatClient) GenerateTitle(ctx context.Context, question string, model s
 	}
 
 	systemPrompt := `
-		Create a concise, 3-5 word phrase with an emoji as a title for the previous query.
+		Create a concise, 3 to 5-word phrase (30 characters max) with an emoji as a title for the previous query.
 		Do not use the word title.
 		Do not use any formatting.
 

@@ -7,7 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"local-ai/internal/application/discussion"
-	domaindiscussion "local-ai/internal/domain/discussion"
 )
 
 // ListDiscussionsResponse is the response structure for listing discussions.
@@ -282,11 +281,7 @@ func AskQuestionStreamHandlerFactory(useCase *discussion.AskQuestionUseCase) gin
 
 		// Save the complete assistant message to the discussion
 		if fullResponse != "" {
-			assistantMessage, err := domaindiscussion.NewMessage(assistantMessageID, domaindiscussion.RoleAssistant, fullResponse)
-			if err == nil {
-				disc.AddMessage(assistantMessage)
-				useCase.SaveDiscussion(c.Request.Context(), disc)
-			}
+			_ = useCase.SaveStreamedResponse(c.Request.Context(), disc, assistantMessageID, fullResponse)
 		}
 
 		// Send completion event
@@ -469,11 +464,7 @@ func AskQuestionQuickStreamHandlerFactory(useCase *discussion.AskQuestionQuickUs
 
 		// Save the complete assistant message to the discussion
 		if fullResponse != "" {
-			assistantMessage, err := domaindiscussion.NewMessage(assistantMessageID, domaindiscussion.RoleAssistant, fullResponse)
-			if err == nil {
-				disc.AddMessage(assistantMessage)
-				useCase.SaveDiscussion(c.Request.Context(), disc)
-			}
+			_ = useCase.SaveStreamedResponse(c.Request.Context(), disc, assistantMessageID, fullResponse)
 		}
 
 		// Send completion event
