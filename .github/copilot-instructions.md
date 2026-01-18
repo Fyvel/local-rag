@@ -1,125 +1,174 @@
-# Copilot Instructions — Implementing Discussion Routes (Go DDD)
+# Copilot Instructions — Local RAG API (Go DDD)
 
-## Goal
-Implement the upcoming "discussion" feature in the existing Go DDD architecture.  
-The feature includes routes for:
-- Listing discussions
-- Creating a discussion
-- Fetching a discussion by ID
-- Asking a question in a discussion
-- Retrieving discussion history
+This is a Go-based RAG (Retrieval-Augmented Generation) API following **Domain-Driven Design (DDD)** and **Clean Architecture** principles.
 
-The routes currently appear commented in `api/router.go`.  
-Copilot must implement them **end-to-end** across layers:
+## Project Overview
 
-- `api/` handlers (Gin)
-- `application/` use cases
-- `domain/` models, aggregates, factories, and repositories
-- `infra/` repository implementations
-- `di/` wiring (constructors + initialization)
+- **Language**: Go 1.23+
+- **Framework**: Gin for HTTP routing
+- **Architecture**: Hexagonal/Clean Architecture with DDD
+- **Key Dependencies**: Ollama (LLM), ChromaDB (vector store), LangChain concepts
 
-Every step must compile, be incremental, and preserve clean DDD boundaries.
-
-## Architectural Expectations
-
-### Domain layer (`domain/discussion`)
-Copilot must:
-- Introduce a `Discussion` aggregate (ID, title/topic, message list, timestamps).
-- Introduce a `Message` or `Entry` value object as needed.
-- Implement domain invariants such as:
-  - Cannot add empty messages.
-  - Cannot add messages to a closed discussion (if applicable).
-- Define repository interfaces (e.g., `DiscussionRepository`).
-- Keep domain models free of infrastructure or API concerns.
-
-### Application layer (`application/discussion`)
-Copilot must:
-- Implement use cases for:
-  - `ListDiscussions`
-  - `CreateDiscussion`
-  - `GetDiscussion`
-  - `AskQuestion`
-  - `GetDiscussionHistory`
-- Inject domain repository interface(s).
-- Translate DTOs from/to domain objects.
-- Handle orchestration logic cleanly.
-
-### API layer (`api/`)
-Copilot must:
-- Introduce handler factories similar to existing patterns.
-- Decode requests into application DTOs.
-- Encode results into JSON responses.
-- Implement or improve the following endpoints:
+## Directory Structure
 
 ```
-GET /api/v1/discussions
-POST /api/v1/discussions
-GET /api/v1/discussions/:id
-POST /api/v1/discussions/:id/question
-GET /api/v1/discussions/:id/history
+server/           → Entry point (main.go)
+internal/
+  api/            → HTTP handlers, routing, DTOs
+  application/    → Use cases, orchestration logic
+  domain/         → Core business logic, entities, interfaces
+  infra/          → External integrations, adapters
+  di/             → Dependency injection container
 ```
 
-- Ensure handlers never contain domain or infrastructure logic.
+## Dependency Rules (CRITICAL)
 
-### Infra layer (`infra/discussion`)
-Copilot must:
-- Create concrete repository implementations.
-- Provide minimal working storage (in-memory first).
-- Allow later extension to database or AI vector store.
-- Keep JSON, DB, filesystem, or external service logic here.
+Always enforce strict dependency flow:
 
-### DI layer (`di/`)
-Copilot must:
-- Add factories to build all discussion use cases.
-- Initialize domain repo via infra implementation.
-- Provide the instance to API factories.
+### Allowed imports:
+- `api` → `application`
+- `application` → `domain` (interfaces only)
+- `infra` → `domain` (implements interfaces)
+- `di` → all layers (wiring only)
 
-## Route Implementation Rules
+### Forbidden imports:
+- `domain` → anything (must be pure, zero internal imports)
+- `application` → `infra` (must use domain interfaces)
+- `api` → `domain` directly (go through application)
+- `api` → `infra` (except main/di setup)
 
-When implementing or adjusting the routes:
-- Ensure consistent naming (Go conventions).
-- Prefer early exits in handlers.
-- Validate path parameters and request bodies at handler level.
-- Use consistent response shapes:
-- `{ "data": … }` or `{ "error": … }`
-- Avoid leaking infra types or domain types directly to HTTP responses.
+## Code Style Guidelines
 
-Copilot may modify the commented endpoints if an improved naming pattern is clearer:
-- `AskQuestionHandler` → `CreateMessageHandler` (if better domain alignment)
-- `HistoryHandler` → `ListMessagesHandler` (if aligned to domain naming)
+### Go Idioms
+- Use `context.Context` as the first parameter for all I/O operations
+- Prefer returning errors over panicking
+- Use functional options pattern for configuration (e.g., `WithBaseURL()`)
+- Follow "accept interfaces, return structs" principle
+- Use small, focused interfaces (Go style)
 
-## Iteration Requirements
+### Naming Conventions
+- Use cases: `*UseCase` suffix (e.g., `AskQuestionUseCase`)
+- Commands: `*Command` suffix for input DTOs
+- Results: `*Result` suffix for output DTOs
+- Handlers: `*Handler` or `*HandlerFactory` suffix
+- No package stuttering (use `documents.Document`, not `documents.DocumentDocument`)
 
-For each proposed change, Copilot must:
-1. Provide a short explanation describing the architectural reasoning.
-2. Show complete updated files or new files.
-3. List movements, renames, or deletions.
-4. Generate a suggested commit message.
-5. Provide brief trade-off notes when a design decision is not obvious.
+### Error Handling
+- Wrap errors with context: `fmt.Errorf("operation failed: %w", err)`
+- Use domain-specific errors in the domain layer
+- Return structured error responses from API handlers
 
-## Additional Guidance
+### Testing
+- Write table-driven tests
+- Use interfaces for mocking dependencies
+- Place test files next to implementation (`*_test.go`)
 
-- Start with domain models before application or API code.
-- Prefer small commits per layer or per use case.
-- Avoid exposing complex domain internals in HTTP responses.
-- Keep error handling minimal and explicit.
-- Ensure `NewRouter` stays clean, delegating logic to factories.
+## DDD Patterns to Follow
 
-## Acceptable Enhancements
-Copilot is allowed to:
-- Add request/response DTOs.
-- Introduce pagination for list endpoints.
-- Introduce domain events (optional).
-- Suggest better naming for endpoints, handlers, and use cases.
-- Add lightweight middleware if needed (e.g., request validation).
+### Aggregates
+- Each aggregate has a root entity that enforces invariants
+- Aggregates are stored/retrieved as a whole
+- Reference other aggregates by ID only
 
-## Completion Criteria
-The feature is considered fully implemented when:
-- All discussion routes compile and function end-to-end.
-- Domain models reflect the discussion domain accurately.
-- Use cases encapsulate logic with no leakage.
-- Infrastructure has minimal working repository implementation.
-- DI container can construct all required services.
-- The router exposes all routes cleanly.
-- No layer violates DDD boundaries.
+### Repositories
+- Define repository interfaces in the domain layer
+- Implement repositories in the infrastructure layer
+- Use domain types in repository methods, not infrastructure types
 
+### Domain Services
+- Use when logic doesn't fit in an entity
+- Keep services stateless
+- Inject through interfaces
+
+### Use Cases (Application Services)
+- One use case per business operation
+- Accept command objects, return result objects
+- Orchestrate domain logic without knowing infrastructure
+
+## Streaming Implementation (SSE/WebSocket)
+
+When implementing streaming endpoints:
+
+### SSE Requirements
+```go
+// Required headers
+w.Header().Set("Content-Type", "text/event-stream")
+w.Header().Set("Cache-Control", "no-cache")
+w.Header().Set("Connection", "keep-alive")
+
+// Stream format
+fmt.Fprintf(w, "data: %s\n\n", chunk)
+flusher.Flush()
+```
+
+### Streaming Use Cases
+- Return `<-chan StreamResponse` for streaming operations
+- Use buffered channels for backpressure handling
+- Always check `context.Done()` for cancellation
+- Close channels properly to signal completion
+- Save final messages to repository after stream completes
+
+## API Conventions
+
+### Request/Response
+- Use JSON for request/response bodies
+- Validate input before processing
+- Return appropriate HTTP status codes
+- Use consistent error response format
+
+### Endpoint Patterns
+```
+POST /api/v1/questions           → Quick question (auto-creates discussion)
+POST /api/v1/questions/stream    → Streaming quick question
+POST /api/v1/discussions         → Create discussion
+GET  /api/v1/discussions         → List discussions
+GET  /api/v1/discussions/:id     → Get discussion
+POST /api/v1/discussions/:id/question        → Ask in discussion
+POST /api/v1/discussions/:id/question/stream → Streaming ask
+```
+
+## Common Patterns
+
+### Handler Factory Pattern
+```go
+func HandlerFactory(useCase *UseCase) gin.HandlerFunc {
+    return func(c *gin.Context) {
+        // Validate input
+        // Call use case
+        // Return response
+    }
+}
+```
+
+### Functional Options
+```go
+type Option func(*Config)
+
+func WithBaseURL(url string) Option {
+    return func(c *Config) {
+        c.BaseURL = url
+    }
+}
+```
+
+### Channel-Based Streaming
+```go
+func (uc *UseCase) ExecuteStream(ctx context.Context, cmd Command) (<-chan Response, error) {
+    out := make(chan Response, 10) // Buffered for backpressure
+    go func() {
+        defer close(out)
+        // Stream processing with ctx.Done() checks
+    }()
+    return out, nil
+}
+```
+
+## Build & Run Commands
+
+```bash
+make deps        # Install dependencies
+make build       # Build the server
+make run         # Run the server
+make test        # Run tests
+swag init -g server/main.go -o docs  # Generate Swagger docs
+```
