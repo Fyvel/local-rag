@@ -9,43 +9,25 @@ import (
 	"local-ai/internal/application/discussion"
 )
 
-// ListDiscussionsResponse is the response structure for listing discussions.
-type ListDiscussionsResponse struct {
-	Discussions []discussion.DiscussionSummaryDTO `json:"discussions"`
-}
-
 // ListDiscussionsHandler handles the GET /discussions endpoint.
 // @Summary      List all discussions
 // @Description  Retrieves a list of all discussions with their summaries
 // @Tags         discussions
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}  SuccessResponse[ListDiscussionsResponse]
-// @Failure      500  {object}  ErrorResponse
+// @Success      200  {object}  Response[[]discussion.DiscussionSummaryResult]
+// @Failure      500  {object}  Response[any]
 // @Router       /discussions [get]
 func ListDiscussionsHandlerFactory(useCase *discussion.ListDiscussionsUseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		result, err := useCase.Execute(c.Request.Context())
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, ErrorResponse{
-				Success: false,
-				Error:   fmt.Sprintf("Failed to list discussions: %v", err),
-			})
+			c.JSON(http.StatusInternalServerError, NewErrorResponse(fmt.Sprintf("Failed to list discussions: %v", err)))
 			return
 		}
 
-		c.JSON(http.StatusOK, SuccessResponse[ListDiscussionsResponse]{
-			Success: true,
-			Data: ListDiscussionsResponse{
-				Discussions: result.Discussions,
-			},
-		})
+		c.JSON(http.StatusOK, NewSuccessResponse(result))
 	}
-}
-
-// CreateDiscussionRequest is the request structure for creating a discussion.
-type CreateDiscussionRequest struct {
-	Title string `json:"title" binding:"required" example:"How to use embeddings?"`
 }
 
 // CreateDiscussionHandler handles the POST /discussions endpoint.
@@ -55,18 +37,15 @@ type CreateDiscussionRequest struct {
 // @Accept       json
 // @Produce      json
 // @Param        request  body      CreateDiscussionRequest  true  "Discussion creation parameters"
-// @Success      201      {object}  SuccessResponse[discussion.CreateDiscussionResult]
-// @Failure      400      {object}  ErrorResponse
-// @Failure      500      {object}  ErrorResponse
+// @Success      201      {object}  Response[discussion.CreateDiscussionResult]
+// @Failure      400      {object}  Response[any]
+// @Failure      500      {object}  Response[any]
 // @Router       /discussions [post]
 func CreateDiscussionHandlerFactory(useCase *discussion.CreateDiscussionUseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req CreateDiscussionRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, ErrorResponse{
-				Success: false,
-				Error:   fmt.Sprintf("Invalid request body: %v", err),
-			})
+			c.JSON(http.StatusBadRequest, NewErrorResponse(fmt.Sprintf("Invalid request body: %v", err)))
 			return
 		}
 
@@ -76,17 +55,11 @@ func CreateDiscussionHandlerFactory(useCase *discussion.CreateDiscussionUseCase)
 
 		result, err := useCase.Execute(c.Request.Context(), cmd)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, ErrorResponse{
-				Success: false,
-				Error:   fmt.Sprintf("Failed to create discussion: %v", err),
-			})
+			c.JSON(http.StatusInternalServerError, NewErrorResponse(fmt.Sprintf("Failed to create discussion: %v", err)))
 			return
 		}
 
-		c.JSON(http.StatusCreated, SuccessResponse[discussion.CreateDiscussionResult]{
-			Success: true,
-			Data:    *result,
-		})
+		c.JSON(http.StatusCreated, NewSuccessResponse(result))
 	}
 }
 
@@ -97,18 +70,15 @@ func CreateDiscussionHandlerFactory(useCase *discussion.CreateDiscussionUseCase)
 // @Accept       json
 // @Produce      json
 // @Param        id   path      string  true  "Discussion ID"
-// @Success      200  {object}  SuccessResponse[discussion.DiscussionDTO]
-// @Failure      400  {object}  ErrorResponse
-// @Failure      404  {object}  ErrorResponse
+// @Success      200  {object}  Response[discussion.DiscussionResult]
+// @Failure      400  {object}  Response[any]
+// @Failure      404  {object}  Response[any]
 // @Router       /discussions/{id} [get]
 func GetDiscussionHandlerFactory(useCase *discussion.GetDiscussionUseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 		if id == "" {
-			c.JSON(http.StatusBadRequest, ErrorResponse{
-				Success: false,
-				Error:   "Discussion ID is required",
-			})
+			c.JSON(http.StatusBadRequest, NewErrorResponse("Discussion ID is required"))
 			return
 		}
 
@@ -118,23 +88,12 @@ func GetDiscussionHandlerFactory(useCase *discussion.GetDiscussionUseCase) gin.H
 
 		result, err := useCase.Execute(c.Request.Context(), query)
 		if err != nil {
-			c.JSON(http.StatusNotFound, ErrorResponse{
-				Success: false,
-				Error:   fmt.Sprintf("Discussion not found: %v", err),
-			})
+			c.JSON(http.StatusNotFound, NewErrorResponse(fmt.Sprintf("Discussion not found: %v", err)))
 			return
 		}
 
-		c.JSON(http.StatusOK, SuccessResponse[discussion.DiscussionDTO]{
-			Success: true,
-			Data:    *result,
-		})
+		c.JSON(http.StatusOK, NewSuccessResponse(result))
 	}
-}
-
-// AskQuestionRequest is the request structure for asking a question.
-type AskQuestionRequest struct {
-	Question string `json:"question" binding:"required" example:"What are vector embeddings?"`
 }
 
 // AskQuestionHandler handles the POST /discussions/:id/question endpoint.
@@ -145,28 +104,22 @@ type AskQuestionRequest struct {
 // @Produce      json
 // @Param        id       path      string                true  "Discussion ID"
 // @Param        request  body      AskQuestionRequest    true  "Question parameters"
-// @Success      201      {object}  SuccessResponse[discussion.AskQuestionResult]
-// @Failure      400      {object}  ErrorResponse
-// @Failure      404      {object}  ErrorResponse
-// @Failure      500      {object}  ErrorResponse
+// @Success      201      {object}  Response[discussion.AskQuestionResult]
+// @Failure      400      {object}  Response[any]
+// @Failure      404      {object}  Response[any]
+// @Failure      500      {object}  Response[any]
 // @Router       /discussions/{id}/question [post]
 func AskQuestionHandlerFactory(useCase *discussion.AskQuestionUseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 		if id == "" {
-			c.JSON(http.StatusBadRequest, ErrorResponse{
-				Success: false,
-				Error:   "Discussion ID is required",
-			})
+			c.JSON(http.StatusBadRequest, NewErrorResponse("Discussion ID is required"))
 			return
 		}
 
 		var req AskQuestionRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, ErrorResponse{
-				Success: false,
-				Error:   fmt.Sprintf("Invalid request body: %v", err),
-			})
+			c.JSON(http.StatusBadRequest, NewErrorResponse(fmt.Sprintf("Invalid request body: %v", err)))
 			return
 		}
 
@@ -177,17 +130,11 @@ func AskQuestionHandlerFactory(useCase *discussion.AskQuestionUseCase) gin.Handl
 
 		result, err := useCase.Execute(c.Request.Context(), cmd)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, ErrorResponse{
-				Success: false,
-				Error:   fmt.Sprintf("Failed to add question: %v", err),
-			})
+			c.JSON(http.StatusInternalServerError, NewErrorResponse(fmt.Sprintf("Failed to add question: %v", err)))
 			return
 		}
 
-		c.JSON(http.StatusCreated, SuccessResponse[discussion.AskQuestionResult]{
-			Success: true,
-			Data:    *result,
-		})
+		c.JSON(http.StatusCreated, NewSuccessResponse(result))
 	}
 }
 
@@ -199,28 +146,22 @@ func AskQuestionHandlerFactory(useCase *discussion.AskQuestionUseCase) gin.Handl
 // @Produce      text/event-stream
 // @Param        id       path      string                true  "Discussion ID"
 // @Param        request  body      AskQuestionRequest    true  "Question parameters"
-// @Success      200      {string}  string                "Streaming response"
-// @Failure      400      {object}  ErrorResponse
-// @Failure      404      {object}  ErrorResponse
-// @Failure      500      {object}  ErrorResponse
+// @Success      200      {string}  string                "Streaming response (SSE stream of tokens)"
+// @Failure      400      {object}  Response[any]
+// @Failure      404      {object}  Response[any]
+// @Failure      500      {object}  Response[any]
 // @Router       /discussions/{id}/question/stream [post]
 func AskQuestionStreamHandlerFactory(useCase *discussion.AskQuestionStreamUseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 		if id == "" {
-			c.JSON(http.StatusBadRequest, ErrorResponse{
-				Success: false,
-				Error:   "Discussion ID is required",
-			})
+			c.JSON(http.StatusBadRequest, NewErrorResponse("Discussion ID is required"))
 			return
 		}
 
 		var req AskQuestionRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, ErrorResponse{
-				Success: false,
-				Error:   fmt.Sprintf("Invalid request body: %v", err),
-			})
+			c.JSON(http.StatusBadRequest, NewErrorResponse(fmt.Sprintf("Invalid request body: %v", err)))
 			return
 		}
 
@@ -232,10 +173,7 @@ func AskQuestionStreamHandlerFactory(useCase *discussion.AskQuestionStreamUseCas
 		// Start streaming
 		responseChan, err := useCase.Execute(c.Request.Context(), cmd)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, ErrorResponse{
-				Success: false,
-				Error:   fmt.Sprintf("Failed to start streaming: %v", err),
-			})
+			c.JSON(http.StatusInternalServerError, NewErrorResponse(fmt.Sprintf("Failed to start streaming: %v", err)))
 			return
 		}
 
@@ -247,10 +185,7 @@ func AskQuestionStreamHandlerFactory(useCase *discussion.AskQuestionStreamUseCas
 
 		flusher, ok := c.Writer.(http.Flusher)
 		if !ok {
-			c.JSON(http.StatusInternalServerError, ErrorResponse{
-				Success: false,
-				Error:   "Streaming not supported",
-			})
+			c.JSON(http.StatusInternalServerError, NewErrorResponse("Streaming not supported"))
 			return
 		}
 
@@ -286,18 +221,15 @@ func AskQuestionStreamHandlerFactory(useCase *discussion.AskQuestionStreamUseCas
 // @Accept       json
 // @Produce      json
 // @Param        id   path      string  true  "Discussion ID"
-// @Success      200  {object}  SuccessResponse[discussion.GetDiscussionHistoryResult]
-// @Failure      400  {object}  ErrorResponse
-// @Failure      404  {object}  ErrorResponse
+// @Success      200  {object}  Response[discussion.GetDiscussionHistoryResult]
+// @Failure      400  {object}  Response[any]
+// @Failure      404  {object}  Response[any]
 // @Router       /discussions/{id}/history [get]
 func GetDiscussionHistoryHandlerFactory(useCase *discussion.GetDiscussionHistoryUseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 		if id == "" {
-			c.JSON(http.StatusBadRequest, ErrorResponse{
-				Success: false,
-				Error:   "Discussion ID is required",
-			})
+			c.JSON(http.StatusBadRequest, NewErrorResponse("Discussion ID is required"))
 			return
 		}
 
@@ -307,17 +239,11 @@ func GetDiscussionHistoryHandlerFactory(useCase *discussion.GetDiscussionHistory
 
 		result, err := useCase.Execute(c.Request.Context(), query)
 		if err != nil {
-			c.JSON(http.StatusNotFound, ErrorResponse{
-				Success: false,
-				Error:   fmt.Sprintf("Discussion not found: %v", err),
-			})
+			c.JSON(http.StatusNotFound, NewErrorResponse(fmt.Sprintf("Discussion not found: %v", err)))
 			return
 		}
 
-		c.JSON(http.StatusOK, SuccessResponse[discussion.GetDiscussionHistoryResult]{
-			Success: true,
-			Data:    *result,
-		})
+		c.JSON(http.StatusOK, NewSuccessResponse(result))
 	}
 }
 
@@ -333,18 +259,15 @@ type QuickQuestionRequest struct {
 // @Accept       json
 // @Produce      json
 // @Param        request  body      QuickQuestionRequest  true  "Question parameters"
-// @Success      201      {object}  SuccessResponse[discussion.AskQuestionQuickResult]
-// @Failure      400      {object}  ErrorResponse
-// @Failure      500      {object}  ErrorResponse
+// @Success      201      {object}  Response[discussion.AskQuestionQuickResult]
+// @Failure      400      {object}  Response[any]
+// @Failure      500      {object}  Response[any]
 // @Router       /questions [post]
 func AskQuestionQuickHandlerFactory(useCase *discussion.AskQuestionQuickUseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req QuickQuestionRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, ErrorResponse{
-				Success: false,
-				Error:   fmt.Sprintf("Invalid request body: %v", err),
-			})
+			c.JSON(http.StatusBadRequest, NewErrorResponse(fmt.Sprintf("Invalid request body: %v", err)))
 			return
 		}
 
@@ -355,17 +278,11 @@ func AskQuestionQuickHandlerFactory(useCase *discussion.AskQuestionQuickUseCase)
 
 		result, err := useCase.Execute(c.Request.Context(), cmd)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, ErrorResponse{
-				Success: false,
-				Error:   fmt.Sprintf("Failed to ask question: %v", err),
-			})
+			c.JSON(http.StatusInternalServerError, NewErrorResponse(fmt.Sprintf("Failed to ask question: %v", err)))
 			return
 		}
 
-		c.JSON(http.StatusCreated, SuccessResponse[discussion.AskQuestionQuickResult]{
-			Success: true,
-			Data:    *result,
-		})
+		c.JSON(http.StatusCreated, NewSuccessResponse(result))
 	}
 }
 
@@ -376,18 +293,15 @@ func AskQuestionQuickHandlerFactory(useCase *discussion.AskQuestionQuickUseCase)
 // @Accept       json
 // @Produce      text/event-stream
 // @Param        request  body      QuickQuestionRequest  true  "Question parameters"
-// @Success      200      {string}  string                "Streaming response"
-// @Failure      400      {object}  ErrorResponse
-// @Failure      500      {object}  ErrorResponse
+// @Success      200      {string}  string                "Streaming response (SSE stream of tokens)"
+// @Failure      400      {object}  Response[any]
+// @Failure      500      {object}  Response[any]
 // @Router       /questions/stream [post]
 func AskQuestionQuickStreamHandlerFactory(useCase *discussion.AskQuestionQuickStreamUseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req QuickQuestionRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, ErrorResponse{
-				Success: false,
-				Error:   fmt.Sprintf("Invalid request body: %v", err),
-			})
+			c.JSON(http.StatusBadRequest, NewErrorResponse(fmt.Sprintf("Invalid request body: %v", err)))
 			return
 		}
 
@@ -399,10 +313,7 @@ func AskQuestionQuickStreamHandlerFactory(useCase *discussion.AskQuestionQuickSt
 		// Start streaming
 		responseChan, err := useCase.Execute(c.Request.Context(), cmd)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, ErrorResponse{
-				Success: false,
-				Error:   fmt.Sprintf("Failed to start streaming: %v", err),
-			})
+			c.JSON(http.StatusInternalServerError, NewErrorResponse(fmt.Sprintf("Failed to start streaming: %v", err)))
 			return
 		}
 
@@ -414,10 +325,7 @@ func AskQuestionQuickStreamHandlerFactory(useCase *discussion.AskQuestionQuickSt
 
 		flusher, ok := c.Writer.(http.Flusher)
 		if !ok {
-			c.JSON(http.StatusInternalServerError, ErrorResponse{
-				Success: false,
-				Error:   "Streaming not supported",
-			})
+			c.JSON(http.StatusInternalServerError, NewErrorResponse("Streaming not supported"))
 			return
 		}
 

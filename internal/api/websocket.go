@@ -38,10 +38,7 @@ func AskQuestionQuickWSHandlerFactory(useCase *discussion.AskQuestionQuickStream
 		// Upgrade HTTP connection to WebSocket
 		conn, err := wsUpgrader.Upgrade(c.Writer, c.Request, nil)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, ErrorResponse{
-				Success: false,
-				Error:   fmt.Sprintf("Failed to upgrade to WebSocket: %v", err),
-			})
+			c.JSON(http.StatusBadRequest, NewErrorResponse(fmt.Sprintf("Failed to upgrade to WebSocket: %v", err)))
 			return
 		}
 		defer conn.Close()
@@ -133,20 +130,14 @@ func AskQuestionWSHandlerFactory(useCase *discussion.AskQuestionStreamUseCase) g
 	return func(c *gin.Context) {
 		discussionID := c.Param("id")
 		if discussionID == "" {
-			c.JSON(http.StatusBadRequest, ErrorResponse{
-				Success: false,
-				Error:   "Discussion ID is required",
-			})
+			c.JSON(http.StatusBadRequest, NewErrorResponse("Discussion ID is required"))
 			return
 		}
 
 		// Upgrade HTTP connection to WebSocket
 		conn, err := wsUpgrader.Upgrade(c.Writer, c.Request, nil)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, ErrorResponse{
-				Success: false,
-				Error:   fmt.Sprintf("Failed to upgrade to WebSocket: %v", err),
-			})
+			c.JSON(http.StatusBadRequest, NewErrorResponse(fmt.Sprintf("Failed to upgrade to WebSocket: %v", err)))
 			return
 		}
 		defer conn.Close()

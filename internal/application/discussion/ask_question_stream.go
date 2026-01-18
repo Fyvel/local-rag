@@ -23,13 +23,6 @@ func NewAskQuestionStreamUseCase(repo discussion.Repository, chatService chat.Se
 	}
 }
 
-type StreamResponse struct {
-	MessageID string `json:"message_id,omitempty"`
-	Token     string `json:"token,omitempty"`
-	Done      bool   `json:"done"`
-	Error     string `json:"error,omitempty"`
-}
-
 func (uc *AskQuestionStreamUseCase) Execute(ctx context.Context, cmd AskQuestionCommand) (<-chan StreamResponse, error) {
 	if cmd.DiscussionID == "" {
 		return nil, fmt.Errorf("discussion ID cannot be empty")

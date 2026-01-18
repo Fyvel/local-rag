@@ -28,23 +28,6 @@ func NewAskQuestionQuickUseCase(repo discussion.Repository, chatService chat.Ser
 	}
 }
 
-type AskQuestionQuickCommand struct {
-	DiscussionID string // Optional - if empty, creates a new discussion
-	Question     string
-}
-
-type AskQuestionQuickResult struct {
-	DiscussionID       string `json:"discussion_id"`
-	DiscussionTitle    string `json:"discussion_title"`
-	UserMessageID      string `json:"user_message_id"`
-	AssistantMessageID string `json:"assistant_message_id"`
-	Question           string `json:"question"`
-	Answer             string `json:"answer"`
-	QuestionTimestamp  string `json:"question_timestamp"`
-	AnswerTimestamp    string `json:"answer_timestamp"`
-	IsNewDiscussion    bool   `json:"is_new_discussion"`
-}
-
 func (uc *AskQuestionQuickUseCase) Execute(ctx context.Context, cmd AskQuestionQuickCommand) (*AskQuestionQuickResult, error) {
 	if cmd.Question == "" {
 		return nil, fmt.Errorf("question cannot be empty")

@@ -25,23 +25,6 @@ func NewAskQuestionUseCase(repo discussion.Repository, chatService chat.Service)
 	}
 }
 
-// AskQuestionCommand contains the parameters for asking a question.
-type AskQuestionCommand struct {
-	DiscussionID string
-	Question     string
-}
-
-// AskQuestionResult contains the result of asking a question.
-type AskQuestionResult struct {
-	UserMessageID      string `json:"user_message_id"`
-	AssistantMessageID string `json:"assistant_message_id"`
-	DiscussionID       string `json:"discussion_id"`
-	Question           string `json:"question"`
-	Answer             string `json:"answer"`
-	QuestionTimestamp  string `json:"question_timestamp"`
-	AnswerTimestamp    string `json:"answer_timestamp"`
-}
-
 // Execute adds a user question to a discussion and generates an AI response.
 func (uc *AskQuestionUseCase) Execute(ctx context.Context, cmd AskQuestionCommand) (*AskQuestionResult, error) {
 	if cmd.DiscussionID == "" {

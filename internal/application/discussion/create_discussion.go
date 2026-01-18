@@ -19,19 +19,6 @@ func NewCreateDiscussionUseCase(repo discussion.Repository) *CreateDiscussionUse
 	return &CreateDiscussionUseCase{repo: repo}
 }
 
-// CreateDiscussionCommand contains the parameters for creating a discussion.
-type CreateDiscussionCommand struct {
-	Title string
-}
-
-// CreateDiscussionResult contains the result of creating a discussion.
-type CreateDiscussionResult struct {
-	ID        string `json:"id"`
-	Title     string `json:"title"`
-	Status    string `json:"status"`
-	CreatedAt string `json:"created_at"`
-}
-
 // Execute creates a new discussion.
 func (uc *CreateDiscussionUseCase) Execute(ctx context.Context, cmd CreateDiscussionCommand) (*CreateDiscussionResult, error) {
 	if cmd.Title == "" {

@@ -17,31 +17,16 @@ func NewListDiscussionsUseCase(repo discussion.Repository) *ListDiscussionsUseCa
 	return &ListDiscussionsUseCase{repo: repo}
 }
 
-// DiscussionSummaryDTO is a data transfer object for discussion summaries.
-type DiscussionSummaryDTO struct {
-	ID           string `json:"id"`
-	Title        string `json:"title"`
-	MessageCount int    `json:"message_count"`
-	Status       string `json:"status"`
-	CreatedAt    string `json:"created_at"`
-	UpdatedAt    string `json:"updated_at"`
-}
-
-// ListDiscussionsResult contains the result of listing discussions.
-type ListDiscussionsResult struct {
-	Discussions []DiscussionSummaryDTO
-}
-
 // Execute retrieves all discussions.
-func (uc *ListDiscussionsUseCase) Execute(ctx context.Context) (*ListDiscussionsResult, error) {
+func (uc *ListDiscussionsUseCase) Execute(ctx context.Context) ([]DiscussionSummaryResult, error) {
 	discussions, err := uc.repo.FindAll(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve discussions: %w", err)
 	}
 
-	summaries := make([]DiscussionSummaryDTO, 0, len(discussions))
+	summaries := make([]DiscussionSummaryResult, 0, len(discussions))
 	for _, d := range discussions {
-		summaries = append(summaries, DiscussionSummaryDTO{
+		summaries = append(summaries, DiscussionSummaryResult{
 			ID:           d.ID,
 			Title:        d.Title,
 			MessageCount: d.MessageCount(),
@@ -51,5 +36,5 @@ func (uc *ListDiscussionsUseCase) Execute(ctx context.Context) (*ListDiscussions
 		})
 	}
 
-	return &ListDiscussionsResult{Discussions: summaries}, nil
+	return summaries, nil
 }

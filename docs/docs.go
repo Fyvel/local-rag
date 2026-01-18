@@ -32,13 +32,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.SuccessResponse-api_ListDiscussionsResponse"
+                            "$ref": "#/definitions/api.Response-array_discussion_DiscussionSummaryResult"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/api.Response-any"
                         }
                     }
                 }
@@ -70,19 +70,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/api.SuccessResponse-discussion_CreateDiscussionResult"
+                            "$ref": "#/definitions/api.Response-discussion_CreateDiscussionResult"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/api.Response-any"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/api.Response-any"
                         }
                     }
                 }
@@ -114,19 +114,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.SuccessResponse-discussion_DiscussionDTO"
+                            "$ref": "#/definitions/api.Response-discussion_DiscussionResult"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/api.Response-any"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/api.Response-any"
                         }
                     }
                 }
@@ -158,19 +158,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.SuccessResponse-discussion_GetDiscussionHistoryResult"
+                            "$ref": "#/definitions/api.Response-discussion_GetDiscussionHistoryResult"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/api.Response-any"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/api.Response-any"
                         }
                     }
                 }
@@ -211,25 +211,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/api.SuccessResponse-discussion_AskQuestionResult"
+                            "$ref": "#/definitions/api.Response-discussion_AskQuestionResult"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/api.Response-any"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/api.Response-any"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/api.Response-any"
                         }
                     }
                 }
@@ -268,7 +268,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Streaming response",
+                        "description": "Streaming response (SSE stream of tokens)",
                         "schema": {
                             "type": "string"
                         }
@@ -276,19 +276,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/api.Response-any"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/api.Response-any"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/api.Response-any"
                         }
                     }
                 }
@@ -311,13 +311,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.SuccessResponse-api_HealthCheckResponse"
+                            "$ref": "#/definitions/api.Response-api_HealthCheckResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/api.Response-any"
                         }
                     }
                 }
@@ -351,19 +351,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/api.SuccessResponse-api_IndexGithubRepoResponse"
+                            "$ref": "#/definitions/api.Response-indexing_IndexRepositoryResult"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/api.Response-any"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/api.Response-any"
                         }
                     }
                 }
@@ -397,19 +397,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/api.SuccessResponse-discussion_AskQuestionQuickResult"
+                            "$ref": "#/definitions/api.Response-discussion_AskQuestionQuickResult"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/api.Response-any"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/api.Response-any"
                         }
                     }
                 }
@@ -441,7 +441,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Streaming response",
+                        "description": "Streaming response (SSE stream of tokens)",
                         "schema": {
                             "type": "string"
                         }
@@ -449,13 +449,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/api.Response-any"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/api.Response-any"
                         }
                     }
                 }
@@ -557,19 +557,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.ErrorResponse": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string",
-                    "example": "Invalid request parameters"
-                },
-                "success": {
-                    "type": "boolean",
-                    "example": false
-                }
-            }
-        },
         "api.HealthCheckResponse": {
             "type": "object",
             "properties": {
@@ -613,26 +600,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.IndexGithubRepoResponse": {
-            "type": "object",
-            "properties": {
-                "index_id": {
-                    "type": "string",
-                    "example": "target_index"
-                }
-            }
-        },
-        "api.ListDiscussionsResponse": {
-            "type": "object",
-            "properties": {
-                "discussions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/discussion.DiscussionSummaryDTO"
-                    }
-                }
-            }
-        },
         "api.QuickQuestionRequest": {
             "type": "object",
             "required": [
@@ -649,99 +616,195 @@ const docTemplate = `{
                 }
             }
         },
-        "api.SuccessResponse-api_HealthCheckResponse": {
+        "api.Response-any": {
             "type": "object",
             "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.HealthCheckResponse"
+                "error": {
+                    "description": "Error message (omitted on success)",
+                    "type": "string"
                 },
-                "success": {
-                    "type": "boolean",
-                    "example": true
+                "result": {
+                    "description": "The response data (omitted on error)"
+                },
+                "status": {
+                    "description": "\"success\" or \"error\"",
+                    "type": "string",
+                    "example": "success"
                 }
             }
         },
-        "api.SuccessResponse-api_IndexGithubRepoResponse": {
+        "api.Response-api_HealthCheckResponse": {
             "type": "object",
             "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.IndexGithubRepoResponse"
+                "error": {
+                    "description": "Error message (omitted on success)",
+                    "type": "string"
                 },
-                "success": {
-                    "type": "boolean",
-                    "example": true
+                "result": {
+                    "description": "The response data (omitted on error)",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/api.HealthCheckResponse"
+                        }
+                    ]
+                },
+                "status": {
+                    "description": "\"success\" or \"error\"",
+                    "type": "string",
+                    "example": "success"
                 }
             }
         },
-        "api.SuccessResponse-api_ListDiscussionsResponse": {
+        "api.Response-array_discussion_DiscussionSummaryResult": {
             "type": "object",
             "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.ListDiscussionsResponse"
+                "error": {
+                    "description": "Error message (omitted on success)",
+                    "type": "string"
                 },
-                "success": {
-                    "type": "boolean",
-                    "example": true
+                "result": {
+                    "description": "The response data (omitted on error)",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/discussion.DiscussionSummaryResult"
+                    }
+                },
+                "status": {
+                    "description": "\"success\" or \"error\"",
+                    "type": "string",
+                    "example": "success"
                 }
             }
         },
-        "api.SuccessResponse-discussion_AskQuestionQuickResult": {
+        "api.Response-discussion_AskQuestionQuickResult": {
             "type": "object",
             "properties": {
-                "data": {
-                    "$ref": "#/definitions/discussion.AskQuestionQuickResult"
+                "error": {
+                    "description": "Error message (omitted on success)",
+                    "type": "string"
                 },
-                "success": {
-                    "type": "boolean",
-                    "example": true
+                "result": {
+                    "description": "The response data (omitted on error)",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/discussion.AskQuestionQuickResult"
+                        }
+                    ]
+                },
+                "status": {
+                    "description": "\"success\" or \"error\"",
+                    "type": "string",
+                    "example": "success"
                 }
             }
         },
-        "api.SuccessResponse-discussion_AskQuestionResult": {
+        "api.Response-discussion_AskQuestionResult": {
             "type": "object",
             "properties": {
-                "data": {
-                    "$ref": "#/definitions/discussion.AskQuestionResult"
+                "error": {
+                    "description": "Error message (omitted on success)",
+                    "type": "string"
                 },
-                "success": {
-                    "type": "boolean",
-                    "example": true
+                "result": {
+                    "description": "The response data (omitted on error)",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/discussion.AskQuestionResult"
+                        }
+                    ]
+                },
+                "status": {
+                    "description": "\"success\" or \"error\"",
+                    "type": "string",
+                    "example": "success"
                 }
             }
         },
-        "api.SuccessResponse-discussion_CreateDiscussionResult": {
+        "api.Response-discussion_CreateDiscussionResult": {
             "type": "object",
             "properties": {
-                "data": {
-                    "$ref": "#/definitions/discussion.CreateDiscussionResult"
+                "error": {
+                    "description": "Error message (omitted on success)",
+                    "type": "string"
                 },
-                "success": {
-                    "type": "boolean",
-                    "example": true
+                "result": {
+                    "description": "The response data (omitted on error)",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/discussion.CreateDiscussionResult"
+                        }
+                    ]
+                },
+                "status": {
+                    "description": "\"success\" or \"error\"",
+                    "type": "string",
+                    "example": "success"
                 }
             }
         },
-        "api.SuccessResponse-discussion_DiscussionDTO": {
+        "api.Response-discussion_DiscussionResult": {
             "type": "object",
             "properties": {
-                "data": {
-                    "$ref": "#/definitions/discussion.DiscussionDTO"
+                "error": {
+                    "description": "Error message (omitted on success)",
+                    "type": "string"
                 },
-                "success": {
-                    "type": "boolean",
-                    "example": true
+                "result": {
+                    "description": "The response data (omitted on error)",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/discussion.DiscussionResult"
+                        }
+                    ]
+                },
+                "status": {
+                    "description": "\"success\" or \"error\"",
+                    "type": "string",
+                    "example": "success"
                 }
             }
         },
-        "api.SuccessResponse-discussion_GetDiscussionHistoryResult": {
+        "api.Response-discussion_GetDiscussionHistoryResult": {
             "type": "object",
             "properties": {
-                "data": {
-                    "$ref": "#/definitions/discussion.GetDiscussionHistoryResult"
+                "error": {
+                    "description": "Error message (omitted on success)",
+                    "type": "string"
                 },
-                "success": {
-                    "type": "boolean",
-                    "example": true
+                "result": {
+                    "description": "The response data (omitted on error)",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/discussion.GetDiscussionHistoryResult"
+                        }
+                    ]
+                },
+                "status": {
+                    "description": "\"success\" or \"error\"",
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "api.Response-indexing_IndexRepositoryResult": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "description": "Error message (omitted on success)",
+                    "type": "string"
+                },
+                "result": {
+                    "description": "The response data (omitted on error)",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/indexing.IndexRepositoryResult"
+                        }
+                    ]
+                },
+                "status": {
+                    "description": "\"success\" or \"error\"",
+                    "type": "string",
+                    "example": "success"
                 }
             }
         },
@@ -820,7 +883,7 @@ const docTemplate = `{
                 }
             }
         },
-        "discussion.DiscussionDTO": {
+        "discussion.DiscussionResult": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -832,7 +895,7 @@ const docTemplate = `{
                 "messages": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/discussion.MessageDTO"
+                        "$ref": "#/definitions/discussion.MessageResult"
                     }
                 },
                 "status": {
@@ -846,7 +909,7 @@ const docTemplate = `{
                 }
             }
         },
-        "discussion.DiscussionSummaryDTO": {
+        "discussion.DiscussionSummaryResult": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -878,12 +941,12 @@ const docTemplate = `{
                 "messages": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/discussion.MessageDTO"
+                        "$ref": "#/definitions/discussion.MessageResult"
                     }
                 }
             }
         },
-        "discussion.MessageDTO": {
+        "discussion.MessageResult": {
             "type": "object",
             "properties": {
                 "content": {
@@ -896,6 +959,54 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "timestamp": {
+                    "type": "string"
+                }
+            }
+        },
+        "indexing.IndexRepositoryResult": {
+            "type": "object",
+            "properties": {
+                "index_id": {
+                    "type": "string"
+                },
+                "repository": {
+                    "$ref": "#/definitions/repositories.Repository"
+                }
+            }
+        },
+        "repositories.File": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "repositories.Repository": {
+            "type": "object",
+            "properties": {
+                "files": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/repositories.File"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "sha": {
+                    "type": "string"
+                },
+                "url": {
                     "type": "string"
                 }
             }

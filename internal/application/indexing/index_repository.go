@@ -21,8 +21,8 @@ type IndexRepositoryCommand struct {
 
 // IndexRepositoryResult contains the result of indexing a repository.
 type IndexRepositoryResult struct {
-	Repository *repositories.Repository
-	IndexID    string
+	Repository *repositories.Repository `json:"repository"`
+	IndexID    string                   `json:"index_id"`
 }
 
 // IndexRepositoryUseCase orchestrates the process of fetching and indexing a GitHub repository.

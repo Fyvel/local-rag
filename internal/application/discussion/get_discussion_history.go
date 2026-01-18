@@ -17,17 +17,6 @@ func NewGetDiscussionHistoryUseCase(repo discussion.Repository) *GetDiscussionHi
 	return &GetDiscussionHistoryUseCase{repo: repo}
 }
 
-// GetDiscussionHistoryQuery contains the parameters for getting discussion history.
-type GetDiscussionHistoryQuery struct {
-	DiscussionID string
-}
-
-// GetDiscussionHistoryResult contains the message history of a discussion.
-type GetDiscussionHistoryResult struct {
-	DiscussionID string       `json:"discussion_id"`
-	Messages     []MessageDTO `json:"messages"`
-}
-
 // Execute retrieves the message history for a discussion.
 func (uc *GetDiscussionHistoryUseCase) Execute(ctx context.Context, query GetDiscussionHistoryQuery) (*GetDiscussionHistoryResult, error) {
 	if query.DiscussionID == "" {
@@ -40,9 +29,9 @@ func (uc *GetDiscussionHistoryUseCase) Execute(ctx context.Context, query GetDis
 	}
 
 	// Convert messages to DTOs
-	messageDTOs := make([]MessageDTO, 0, len(disc.Messages))
+	messageDTOs := make([]MessageResult, 0, len(disc.Messages))
 	for _, msg := range disc.Messages {
-		messageDTOs = append(messageDTOs, MessageDTO{
+		messageDTOs = append(messageDTOs, MessageResult{
 			ID:        msg.ID,
 			Role:      string(msg.Role),
 			Content:   msg.Content,

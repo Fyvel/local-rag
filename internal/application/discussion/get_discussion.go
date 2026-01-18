@@ -17,31 +17,8 @@ func NewGetDiscussionUseCase(repo discussion.Repository) *GetDiscussionUseCase {
 	return &GetDiscussionUseCase{repo: repo}
 }
 
-// MessageDTO is a data transfer object for messages.
-type MessageDTO struct {
-	ID        string `json:"id"`
-	Role      string `json:"role"`
-	Content   string `json:"content"`
-	Timestamp string `json:"timestamp"`
-}
-
-// DiscussionDTO is a data transfer object for a complete discussion.
-type DiscussionDTO struct {
-	ID        string       `json:"id"`
-	Title     string       `json:"title"`
-	Messages  []MessageDTO `json:"messages"`
-	Status    string       `json:"status"`
-	CreatedAt string       `json:"created_at"`
-	UpdatedAt string       `json:"updated_at"`
-}
-
-// GetDiscussionQuery contains the parameters for getting a discussion.
-type GetDiscussionQuery struct {
-	ID string
-}
-
 // Execute retrieves a discussion by ID.
-func (uc *GetDiscussionUseCase) Execute(ctx context.Context, query GetDiscussionQuery) (*DiscussionDTO, error) {
+func (uc *GetDiscussionUseCase) Execute(ctx context.Context, query GetDiscussionQuery) (*DiscussionResult, error) {
 	if query.ID == "" {
 		return nil, fmt.Errorf("discussion ID cannot be empty")
 	}
@@ -52,9 +29,9 @@ func (uc *GetDiscussionUseCase) Execute(ctx context.Context, query GetDiscussion
 	}
 
 	// Convert messages to DTOs
-	messageDTOs := make([]MessageDTO, 0, len(disc.Messages))
+	messageDTOs := make([]MessageResult, 0, len(disc.Messages))
 	for _, msg := range disc.Messages {
-		messageDTOs = append(messageDTOs, MessageDTO{
+		messageDTOs = append(messageDTOs, MessageResult{
 			ID:        msg.ID,
 			Role:      string(msg.Role),
 			Content:   msg.Content,
@@ -62,7 +39,7 @@ func (uc *GetDiscussionUseCase) Execute(ctx context.Context, query GetDiscussion
 		})
 	}
 
-	return &DiscussionDTO{
+	return &DiscussionResult{
 		ID:        disc.ID,
 		Title:     disc.Title,
 		Messages:  messageDTOs,

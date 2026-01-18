@@ -18,18 +18,15 @@ type HealthCheckResponse struct {
 // @Tags         health
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}  SuccessResponse[HealthCheckResponse]
-// @Failure      500  {object}  ErrorResponse
+// @Success      200  {object}  Response[HealthCheckResponse]
+// @Failure      500  {object}  Response[any]
 // @Router       /health [get]
 func HealthCheckHandler(c *gin.Context) {
-	response := HealthCheckResponse{
+	result := HealthCheckResponse{
 		Status:  "ok",
 		Service: "local-rag-api",
 		Version: "1.0.0",
 	}
 
-	c.JSON(http.StatusOK, SuccessResponse[HealthCheckResponse]{
-		Success: true,
-		Data:    response,
-	})
+	c.JSON(http.StatusOK, NewSuccessResponse(result))
 }

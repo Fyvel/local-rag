@@ -28,16 +28,6 @@ func NewAskQuestionQuickStreamUseCase(repo discussion.Repository, chatService ch
 	}
 }
 
-type QuickStreamResponse struct {
-	DiscussionID    string `json:"discussion_id,omitempty"`
-	DiscussionTitle string `json:"discussion_title,omitempty"`
-	MessageID       string `json:"message_id,omitempty"`
-	Token           string `json:"token,omitempty"`
-	Done            bool   `json:"done"`
-	IsNewDiscussion bool   `json:"is_new_discussion,omitempty"`
-	Error           string `json:"error,omitempty"`
-}
-
 func (uc *AskQuestionQuickStreamUseCase) Execute(ctx context.Context, cmd AskQuestionQuickCommand) (<-chan QuickStreamResponse, error) {
 	if cmd.Question == "" {
 		return nil, fmt.Errorf("question cannot be empty")
