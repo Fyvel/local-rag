@@ -136,3 +136,11 @@ func (c *Container) NewGetDiscussionHistoryUseCase() *discussion.GetDiscussionHi
 func (c *Container) NewAskQuestionQuickUseCase() *discussion.AskQuestionQuickUseCase {
 	return discussion.NewAskQuestionQuickUseCase(c.DiscussionRepository, c.ChatService, c.TitleModel)
 }
+
+func (c *Container) NewAskQuestionStreamUseCase() *discussion.AskQuestionStreamUseCase {
+	return discussion.NewAskQuestionStreamUseCase(c.DiscussionRepository, c.ChatService)
+}
+
+func (c *Container) NewAskQuestionQuickStreamUseCase() *discussion.AskQuestionQuickStreamUseCase {
+	return discussion.NewAskQuestionQuickStreamUseCase(c.DiscussionRepository, c.ChatService, c.TitleModel)
+}

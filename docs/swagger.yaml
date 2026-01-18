@@ -547,4 +547,51 @@ paths:
       summary: Ask a question with streaming (with auto-discussion creation)
       tags:
       - discussions
+  /ws/discussions/{id}/question:
+    get:
+      consumes:
+      - application/json
+      description: Asks a question in an existing discussion with WebSocket streaming
+      parameters:
+      - description: Discussion ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "101":
+          description: Switching Protocols
+          schema:
+            type: string
+      summary: Ask a question in a discussion with WebSocket streaming
+      tags:
+      - discussions
+  /ws/questions:
+    get:
+      consumes:
+      - application/json
+      description: Asks a question with WebSocket streaming, creating a new discussion
+        if needed
+      parameters:
+      - description: Discussion ID (optional)
+        in: query
+        name: discussion_id
+        type: string
+      - description: Question to ask
+        in: query
+        name: question
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "101":
+          description: Switching Protocols
+          schema:
+            type: string
+      summary: Ask a question with WebSocket streaming
+      tags:
+      - discussions
 swagger: "2.0"

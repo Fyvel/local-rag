@@ -27,8 +27,10 @@ func NewRouter(cfg RouterConfig) *gin.Engine {
 	createDiscussionUseCase := cfg.Container.NewCreateDiscussionUseCase()
 	getDiscussionUseCase := cfg.Container.NewGetDiscussionUseCase()
 	askQuestionUseCase := cfg.Container.NewAskQuestionUseCase()
+	askQuestionStreamUseCase := cfg.Container.NewAskQuestionStreamUseCase()
 	getDiscussionHistoryUseCase := cfg.Container.NewGetDiscussionHistoryUseCase()
 	askQuestionQuickUseCase := cfg.Container.NewAskQuestionQuickUseCase()
+	askQuestionQuickStreamUseCase := cfg.Container.NewAskQuestionQuickStreamUseCase()
 
 	// API v1 routes
 	v1 := r.Group("/api/v1")
@@ -41,15 +43,19 @@ func NewRouter(cfg RouterConfig) *gin.Engine {
 
 		// Quick question endpoints (auto-creates discussions)
 		v1.POST("/questions", AskQuestionQuickHandlerFactory(askQuestionQuickUseCase))
-		v1.POST("/questions/stream", AskQuestionQuickStreamHandlerFactory(askQuestionQuickUseCase))
+		v1.POST("/questions/stream", AskQuestionQuickStreamHandlerFactory(askQuestionQuickStreamUseCase))
 
 		// Discussion endpoints
 		v1.GET("/discussions", ListDiscussionsHandlerFactory(listDiscussionsUseCase))
 		v1.POST("/discussions", CreateDiscussionHandlerFactory(createDiscussionUseCase))
 		v1.GET("/discussions/:id", GetDiscussionHandlerFactory(getDiscussionUseCase))
 		v1.POST("/discussions/:id/question", AskQuestionHandlerFactory(askQuestionUseCase))
-		v1.POST("/discussions/:id/question/stream", AskQuestionStreamHandlerFactory(askQuestionUseCase))
+		v1.POST("/discussions/:id/question/stream", AskQuestionStreamHandlerFactory(askQuestionStreamUseCase))
 		v1.GET("/discussions/:id/history", GetDiscussionHistoryHandlerFactory(getDiscussionHistoryUseCase))
+
+		// WebSocket endpoints (alternative to SSE)
+		v1.GET("/ws/questions", AskQuestionQuickWSHandlerFactory(askQuestionQuickStreamUseCase))
+		v1.GET("/ws/discussions/:id/question", AskQuestionWSHandlerFactory(askQuestionStreamUseCase))
 	}
 
 	// Swagger documentation

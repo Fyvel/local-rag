@@ -204,7 +204,7 @@ func AskQuestionHandlerFactory(useCase *discussion.AskQuestionUseCase) gin.Handl
 // @Failure      404      {object}  ErrorResponse
 // @Failure      500      {object}  ErrorResponse
 // @Router       /discussions/{id}/question/stream [post]
-func AskQuestionStreamHandlerFactory(useCase *discussion.AskQuestionUseCase) gin.HandlerFunc {
+func AskQuestionStreamHandlerFactory(useCase *discussion.AskQuestionStreamUseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 		if id == "" {
@@ -229,15 +229,15 @@ func AskQuestionStreamHandlerFactory(useCase *discussion.AskQuestionUseCase) gin
 			Question:     req.Question,
 		}
 
-		stream, disc, assistantMessageID, err := useCase.ExecuteStream(c.Request.Context(), cmd)
+		// Start streaming
+		responseChan, err := useCase.Execute(c.Request.Context(), cmd)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse{
 				Success: false,
-				Error:   fmt.Sprintf("Failed to ask question: %v", err),
+				Error:   fmt.Sprintf("Failed to start streaming: %v", err),
 			})
 			return
 		}
-		defer stream.Close()
 
 		// Set SSE headers
 		c.Header("Content-Type", "text/event-stream")
@@ -245,11 +245,6 @@ func AskQuestionStreamHandlerFactory(useCase *discussion.AskQuestionUseCase) gin
 		c.Header("Connection", "keep-alive")
 		c.Header("Transfer-Encoding", "chunked")
 
-		// Buffer to collect the full response for saving
-		var fullResponse string
-
-		// Stream the response
-		buf := make([]byte, 1024)
 		flusher, ok := c.Writer.(http.Flusher)
 		if !ok {
 			c.JSON(http.StatusInternalServerError, ErrorResponse{
@@ -259,34 +254,28 @@ func AskQuestionStreamHandlerFactory(useCase *discussion.AskQuestionUseCase) gin
 			return
 		}
 
-		for {
-			n, err := stream.Read(buf)
-			if n > 0 {
-				chunk := string(buf[:n])
-				fullResponse += chunk
+		// Stream tokens from channel
+		for response := range responseChan {
+			if response.Error != "" {
+				// Send error event
+				fmt.Fprintf(c.Writer, "event: error\ndata: {\"error\": \"%s\"}\n\n", response.Error)
+				flusher.Flush()
+				return
+			}
 
-				// Send SSE event
-				fmt.Fprintf(c.Writer, "data: %s\n\n", chunk)
+			if response.Done {
+				// Send completion event
+				fmt.Fprintf(c.Writer, "event: done\ndata: {\"message_id\": \"%s\"}\n\n", response.MessageID)
+				flusher.Flush()
+				return
+			}
+
+			if response.Token != "" {
+				// Send token event
+				fmt.Fprintf(c.Writer, "data: %s\n\n", response.Token)
 				flusher.Flush()
 			}
-
-			if err != nil {
-				if err.Error() != "EOF" {
-					fmt.Fprintf(c.Writer, "event: error\ndata: %s\n\n", err.Error())
-					flusher.Flush()
-				}
-				break
-			}
 		}
-
-		// Save the complete assistant message to the discussion
-		if fullResponse != "" {
-			_ = useCase.SaveStreamedResponse(c.Request.Context(), disc, assistantMessageID, fullResponse)
-		}
-
-		// Send completion event
-		fmt.Fprintf(c.Writer, "event: done\ndata: {\"message_id\": \"%s\"}\n\n", assistantMessageID)
-		flusher.Flush()
 	}
 }
 
@@ -391,7 +380,7 @@ func AskQuestionQuickHandlerFactory(useCase *discussion.AskQuestionQuickUseCase)
 // @Failure      400      {object}  ErrorResponse
 // @Failure      500      {object}  ErrorResponse
 // @Router       /questions/stream [post]
-func AskQuestionQuickStreamHandlerFactory(useCase *discussion.AskQuestionQuickUseCase) gin.HandlerFunc {
+func AskQuestionQuickStreamHandlerFactory(useCase *discussion.AskQuestionQuickStreamUseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req QuickQuestionRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
@@ -407,15 +396,15 @@ func AskQuestionQuickStreamHandlerFactory(useCase *discussion.AskQuestionQuickUs
 			Question:     req.Question,
 		}
 
-		stream, disc, assistantMessageID, isNew, err := useCase.ExecuteStream(c.Request.Context(), cmd)
+		// Start streaming
+		responseChan, err := useCase.Execute(c.Request.Context(), cmd)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse{
 				Success: false,
-				Error:   fmt.Sprintf("Failed to ask question: %v", err),
+				Error:   fmt.Sprintf("Failed to start streaming: %v", err),
 			})
 			return
 		}
-		defer stream.Close()
 
 		// Set SSE headers
 		c.Header("Content-Type", "text/event-stream")
@@ -423,7 +412,6 @@ func AskQuestionQuickStreamHandlerFactory(useCase *discussion.AskQuestionQuickUs
 		c.Header("Connection", "keep-alive")
 		c.Header("Transfer-Encoding", "chunked")
 
-		// Send initial metadata about the discussion
 		flusher, ok := c.Writer.(http.Flusher)
 		if !ok {
 			c.JSON(http.StatusInternalServerError, ErrorResponse{
@@ -433,42 +421,36 @@ func AskQuestionQuickStreamHandlerFactory(useCase *discussion.AskQuestionQuickUs
 			return
 		}
 
-		// Send discussion info
-		fmt.Fprintf(c.Writer, "event: discussion\ndata: {\"discussion_id\": \"%s\", \"title\": \"%s\", \"is_new\": %t}\n\n", disc.ID, disc.Title, isNew)
-		flusher.Flush()
+		// Stream responses from channel
+		for response := range responseChan {
+			if response.Error != "" {
+				// Send error event
+				fmt.Fprintf(c.Writer, "event: error\ndata: {\"error\": \"%s\"}\n\n", response.Error)
+				flusher.Flush()
+				return
+			}
 
-		// Buffer to collect the full response for saving
-		var fullResponse string
+			// Send discussion metadata if present (new discussion)
+			if response.IsNewDiscussion && response.DiscussionID != "" && response.Token == "" {
+				fmt.Fprintf(c.Writer, "event: discussion\ndata: {\"discussion_id\": \"%s\", \"title\": \"%s\", \"is_new\": true}\n\n",
+					response.DiscussionID, response.DiscussionTitle)
+				flusher.Flush()
+				continue
+			}
 
-		// Stream the response
-		buf := make([]byte, 1024)
-		for {
-			n, err := stream.Read(buf)
-			if n > 0 {
-				chunk := string(buf[:n])
-				fullResponse += chunk
+			if response.Done {
+				// Send completion event
+				fmt.Fprintf(c.Writer, "event: done\ndata: {\"message_id\": \"%s\", \"discussion_id\": \"%s\"}\n\n",
+					response.MessageID, response.DiscussionID)
+				flusher.Flush()
+				return
+			}
 
-				// Send SSE event
-				fmt.Fprintf(c.Writer, "data: %s\n\n", chunk)
+			if response.Token != "" {
+				// Send token event
+				fmt.Fprintf(c.Writer, "data: %s\n\n", response.Token)
 				flusher.Flush()
 			}
-
-			if err != nil {
-				if err.Error() != "EOF" {
-					fmt.Fprintf(c.Writer, "event: error\ndata: %s\n\n", err.Error())
-					flusher.Flush()
-				}
-				break
-			}
 		}
-
-		// Save the complete assistant message to the discussion
-		if fullResponse != "" {
-			_ = useCase.SaveStreamedResponse(c.Request.Context(), disc, assistantMessageID, fullResponse)
-		}
-
-		// Send completion event
-		fmt.Fprintf(c.Writer, "event: done\ndata: {\"message_id\": \"%s\", \"discussion_id\": \"%s\"}\n\n", assistantMessageID, disc.ID)
-		flusher.Flush()
 	}
 }

@@ -460,6 +460,76 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/ws/discussions/{id}/question": {
+            "get": {
+                "description": "Asks a question in an existing discussion with WebSocket streaming",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "discussions"
+                ],
+                "summary": "Ask a question in a discussion with WebSocket streaming",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Discussion ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "101": {
+                        "description": "Switching Protocols",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/ws/questions": {
+            "get": {
+                "description": "Asks a question with WebSocket streaming, creating a new discussion if needed",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "discussions"
+                ],
+                "summary": "Ask a question with WebSocket streaming",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Discussion ID (optional)",
+                        "name": "discussion_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Question to ask",
+                        "name": "question",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "101": {
+                        "description": "Switching Protocols",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {

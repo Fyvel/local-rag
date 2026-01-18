@@ -258,6 +258,120 @@ func (sr *streamReader) Close() error {
 	return sr.body.Close()
 }
 
+func (c *ChatClient) CompleteStreamChannel(ctx context.Context, req chat.CompletionRequest) (<-chan chat.StreamChunk, error) {
+	// Convert messages to Ollama format
+	ollamaMessages := make([]ollamaMessage, len(req.Messages))
+	for i, msg := range req.Messages {
+		ollamaMessages[i] = ollamaMessage{
+			Role:    msg.Role,
+			Content: msg.Content,
+		}
+	}
+
+	model := req.Model
+	if model == "" {
+		model = c.model
+	}
+
+	ollamaReq := ollamaChatRequest{
+		Model:    model,
+		Messages: ollamaMessages,
+		Stream:   true,
+	}
+
+	reqBody, err := json.Marshal(ollamaReq)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	// Make HTTP request
+	url := c.baseURL + ChatEndpoint
+	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(reqBody))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+	httpReq.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(httpReq)
+	if err != nil {
+		return nil, fmt.Errorf("failed to send request: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		return nil, fmt.Errorf("ollama API error: status %d, body: %s", resp.StatusCode, string(body))
+	}
+
+	// Create buffered channel (buffer size tuned for small bursts)
+	chunkChan := make(chan chat.StreamChunk, 10)
+
+	// Spawn goroutine to read stream and emit to channel
+	go func() {
+		defer close(chunkChan)
+		defer resp.Body.Close()
+
+		scanner := bufio.NewScanner(resp.Body)
+		for scanner.Scan() {
+			// Check context cancellation
+			select {
+			case <-ctx.Done():
+				chunkChan <- chat.StreamChunk{
+					Done:  true,
+					Error: ctx.Err(),
+				}
+				return
+			default:
+			}
+
+			line := scanner.Bytes()
+			if len(line) == 0 {
+				continue // Skip empty lines
+			}
+
+			// Parse the NDJSON line
+			var ollamaResp ollamaChatResponse
+			if err := json.Unmarshal(line, &ollamaResp); err != nil {
+				chunkChan <- chat.StreamChunk{
+					Done:  true,
+					Error: fmt.Errorf("failed to parse stream chunk: %w", err),
+				}
+				return
+			}
+
+			// Emit chunk
+			chunk := chat.StreamChunk{
+				Content: ollamaResp.Message.Content,
+				Done:    ollamaResp.Done,
+			}
+
+			select {
+			case chunkChan <- chunk:
+			case <-ctx.Done():
+				chunkChan <- chat.StreamChunk{
+					Done:  true,
+					Error: ctx.Err(),
+				}
+				return
+			}
+
+			if ollamaResp.Done {
+				return
+			}
+		}
+
+		// Check for scanner errors
+		if err := scanner.Err(); err != nil {
+			chunkChan <- chat.StreamChunk{
+				Done:  true,
+				Error: fmt.Errorf("stream read error: %w", err),
+			}
+		}
+	}()
+
+	return chunkChan, nil
+}
+
 func (c *ChatClient) GenerateTitle(ctx context.Context, question string, model string) (string, error) {
 	if model == "" {
 		model = "mistral:latest"
